@@ -8,10 +8,10 @@
     var disp = document.getElementById('disp');
 
     if (window.DeviceMotionEvent) {
-      window.addEventListener('devicemotion', function(event) {
-        disp.innerHTML = "Alpha :" + event.alpha;
+      window.addEventListener('deviceorientation', function(event) {
+        disp.innerHTML = "Alpha: " + event.alpha;
       });
     }
   </script>
-  
+
 </body>
