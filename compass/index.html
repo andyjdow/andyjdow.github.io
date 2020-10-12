@@ -1,1 +1,17 @@
-Hello world - sub-dir!
+
+<body>
+  Hello world - sub-dir!
+  
+  <div id="disp">Heading will display here</div>
+  
+  <script type="text/javascript">
+    var disp = document.getElementById('disp');
+
+    if (window.DeviceMotionEvent) {
+      window.addEventListener('devicemotion', function(event) {
+        disp.innerHTML = "Alpha :" + event.alpha;
+      });
+    }
+  </script>
+  
+</body>
