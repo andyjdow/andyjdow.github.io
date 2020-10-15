@@ -18,6 +18,8 @@
       height: 90vh;
       width: 100vw;
       z-index: 0;
+      transform-box: fill-box;
+      transform-origin: center;
     }
     #needle {
       position: absolute;
@@ -26,6 +28,8 @@
       height: 90vh;
       width: 100vw;
       z-index: 1;
+      transform-box: fill-box;
+      transform-origin: center;
     }
   </style>
 
@@ -179,8 +183,8 @@
           disp.innerHTML = "Alpha: " + event.alpha;
           // var rotation = 360 - event.alpha;
           var rotation = event.alpha;
-          // needle.style.transform = "rotate("+rotation+"deg)";
-          needle.setAttribute("transform","rotate("+rotation+")");
+          needle.style.transform = "rotate("+rotation+"deg)";
+          // needle.setAttribute("transform","rotate("+rotation+")");
         } else {
           disp.innerHTML = "Alpha is undefined ";
         }
