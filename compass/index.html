@@ -4,7 +4,13 @@
   <!-- Positioning:
         o "absolute" position set an elements position within the next parent element with "relative" position. 
         o "relative" position mean it can be position relative to itself as placed in document order 
-       Sizing and div arrangement copied from lamplightdev/compass -->
+       Sizing (& positioning) and div arrangement copied from lamplightdev/compass which seems to rotate with no issues
+        o Don't really understand how it works as the svg container divs are kind of set to zero size! 
+        o Note we also rotate the container div rather than the svg
+        o The key entry seemed to be adding overflow=hidden to the compass container div, without it I got the same
+          behavior as with my initial attempt using vh & vw to successfully auto scale the SVGs 
+          o I guess this deals with the rotation of the surrounding box which causes a change in the overall width and height
+  -->
   <style type="text/css">
     
     #compass {
@@ -44,7 +50,6 @@
        The "vh" (viewpoert height) & "vw" (viewport width) were the only things I could get to work to correctly scale the image
         o  https://stackoverflow.com/questions/27612931/styling-html-and-body-selector-to-height-100-vs-using-100vh -->
   <!-- <style type="text/css">
-    
     #compass {
       position: relative;
     }
