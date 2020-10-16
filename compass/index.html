@@ -15,7 +15,7 @@
     
     #compass {
       position: relative;
-      height: 100%;
+      height: 80%;
       width: 100%;
       overflow: hidden;
     }
@@ -42,6 +42,30 @@
     #needle {
       height: 100%;
       width: 100%;
+    }
+    #heading_container {
+      position: relative;
+      height: 10%;
+      width: 100%;
+    }
+    #slider {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      /*width: 75%;*/
+    }
+    #heading {
+      position: absolute;
+      /*top: 0;
+      right: 3%;*/
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      /*width: 20%*/
+    }
+    #message {
+
     }
   </style>
   <!-- Positioning:
@@ -73,9 +97,7 @@
   </style> -->
 </head>
 <body>
-  <div id="disp">Heading will display here</div>
   <div id="compass">
-
     <div id="rose_container">
       <svg id="rose" version="1.1" viewBox="0 0 80.465 80.465"xmlns="http://www.w3.org/2000/svg"xmlns:cc="http://creativecommons.org/ns#"xmlns:dc="http://purl.org/dc/elements/1.1/"xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
         <metadata>
@@ -190,7 +212,6 @@
         </g>
       </svg>
     </div>
-
     <!-- NOTE: Manually correct viewBox to match above -->
     <div id="needle_container">
       <svg id="needle" version="1.1" viewBox="0 0 80.465 80.465" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
@@ -216,26 +237,48 @@
       </svg>
     </div>
   </div>
-  
+  <dir id="heading_container">
+    <input id="slider"  type="range"  min="0" max="359" value="0">
+    <input id="heading" type="number" min="0" max="359"  value="0">
+  </dir>
+  <div id="message">Heading will display here</div>
+
   <script type="text/javascript">
-    var ver = 1;
-    var disp   = document.getElementById('disp');
-    // var needle = document.getElementById('needle');
-    var needle = document.getElementById('needle_container');
+    var ver = 2;
+    var message = document.getElementById('message');
+    var rose    = document.getElementById('rose_container');
+    var needle  = document.getElementById('needle_container');
+    var slider  = document.getElementById('slider');
+    var heading = document.getElementById('heading');
 
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
-        if (event.alpha) {
-          disp.innerHTML = "Alpha("+ver+"): " + event.alpha;
-          // var rotation = 360 - event.alpha;
-          var rotation = event.alpha;
-          needle.style.transform = "rotate("+rotation+"deg)";
-          // needle.setAttribute("transform","rotate("+rotation+")");
+        var rotation = 0;
+        if (event.webkitCompassHeading) {
+          message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
+          rotation = event.webkitCompassHeading;
+        } else if (event.alpha) {
+          message.innerHTML = "Alpha("+ver+"): " + event.alpha;
+          rotation = event.alpha;
         } else {
-          disp.innerHTML = "Alpha("+ver+") is undefined ";
+          message.innerHTML = "Alpha("+ver+") is undefined ";
         }
+        // Rotate needle
+        needle.style.transform = "rotate("+rotation+"deg)";
       });
+    } else {
+      message.innerHTML = "Device orientation not supported. :-("
     }
+
+    slider.addEventListener('input', function() {
+      heading.value = slider.value;
+      rose.style.transform = "rotate("+slider.value+"deg)";
+    })
+
+    heading.addEventListener('input', function() {
+        rose.style.transform = "rotate("+heading.value+"deg)";
+        slider.value = heading.value;
+    })
   </script>
 
 </body>
