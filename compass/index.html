@@ -3,13 +3,15 @@
 
   <!-- Positioning:
         o "absolute" position set an elements position within the next parent element with "relative" position. 
-        o "relative" position mean it can be position relative to itself as placed in document order -->
+        o "relative" position mean it can be position relative to itself as placed in document order 
+       Sizing and div arrangement copied from lamplightdev/compass -->
   <style type="text/css">
     
     #compass {
       position: relative;
       height: 100%;
       width: 100%;
+      overflow: hidden;
     }
     #rose_container {
       position: absolute;
@@ -211,6 +213,7 @@
   </div>
   
   <script type="text/javascript">
+    var ver = 1;
     var disp   = document.getElementById('disp');
     // var needle = document.getElementById('needle');
     var needle = document.getElementById('needle_container');
@@ -218,13 +221,13 @@
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
         if (event.alpha) {
-          disp.innerHTML = "Alpha: " + event.alpha;
+          disp.innerHTML = "Alpha("+ver+"): " + event.alpha;
           // var rotation = 360 - event.alpha;
           var rotation = event.alpha;
           needle.style.transform = "rotate("+rotation+"deg)";
           // needle.setAttribute("transform","rotate("+rotation+")");
         } else {
-          disp.innerHTML = "Alpha is undefined ";
+          disp.innerHTML = "Alpha("+ver+") is undefined ";
         }
       });
     }
