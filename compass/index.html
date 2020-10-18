@@ -291,10 +291,10 @@
           // message.innerHTML = "Alpha("+ver+") is undefined ";
           message.innerHTML = "Alpha is undefined";
         }
-        if (track.length > 0) {
-          var latlong = track[track.length-1];
-          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toPrecision(2)+", "+latlong[1].toPrecision(2);
-        }
+        // if (track.length > 0) {
+        //   var latlong = track[track.length-1];
+        //   message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toPrecision(2)+", "+latlong[1].toPrecision(2);
+        // }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
       });
