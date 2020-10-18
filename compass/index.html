@@ -281,20 +281,20 @@
         var rotation = 0;
         if (event.webkitCompassHeading) {
           // message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
-          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading;
+          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading.toFixed(0);
           rotation = event.webkitCompassHeading;
         } else if (event.alpha) {
           // message.innerHTML = "Alpha("+ver+"): " + event.alpha;
-          message.innerHTML = "Alpha: " + event.alpha;
+          message.innerHTML = "Alpha: " + event.alpha.toFixed(0);
           rotation = event.alpha;
         } else {
           // message.innerHTML = "Alpha("+ver+") is undefined ";
           message.innerHTML = "Alpha is undefined";
         }
-        // if (track.length > 0) {
-        //   var latlong = track[track.length-1];
-        //   message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toPrecision(2)+", "+latlong[1].toPrecision(2);
-        // }
+        if (track.length > 0) {
+          var latlong = track[track.length-1];
+          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(2)+", "+latlong[1].toFixed(2);
+        }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
       });
