@@ -321,18 +321,19 @@
           navigator.geolocation.getCurrentPosition(function(position) {
             track.push([position.coords.latitude,position.coords.longitude]);
           })
-          options = {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          };
+          // options = {
+          //   enableHighAccuracy: true,
+          //   timeout: 5000,
+          //   maximumAge: 0
+          // };
           navigator.geolocation.watchPosition(function(position) {
             track.push([position.coords.latitude,position.coords.longitude]);
-          },
-          function(error) {
-            alert(error.code+": "+error.message);
-          },
-          options);
+          });
+          // ,
+          // function(error) {
+          //   alert(error.code+": "+error.message);
+          // },
+          // options);
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
