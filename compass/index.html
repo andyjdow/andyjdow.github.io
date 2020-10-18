@@ -15,12 +15,12 @@
           o I guess this deals with the rotation of the surrounding box which causes a change in the overall width and height
   -->
   <style type="text/css">
-    
     #compass {
       position: relative;
       height: 80%;
       width: 100%;
       overflow: hidden;
+      box-sizing: border-box;
     }
     #rose_container {
       position: absolute;
@@ -50,25 +50,25 @@
       position: relative;
       height: 10%;
       width: 100%;
+      /* border-box ensures 100% includes any rogue padding and it doesn't overrun the page */
+      box-sizing: border-box;
+      /*border-style: solid;*/
+      font-size: large;
     }
     #slider {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      /*width: 75%;*/
     }
     #heading {
       position: absolute;
-      /*top: 0;
-      right: 3%;*/
       bottom: 0;
       left: 0;
       width: 100%;
-      /*width: 20%*/
     }
     #message {
-
+      font-size: large;
     }
   </style>
   <!-- Positioning:
@@ -242,7 +242,7 @@
   </div>
   <dir id="heading_container">
     <input id="slider"  type="range"  min="0" max="359" value="0">
-    <input id="heading" type="number" min="0" max="359"  value="0">
+    <input id="heading" type="number" min="0" max="359" value="0">
   </dir>
   <div id="message">Heading will display here</div>
 
