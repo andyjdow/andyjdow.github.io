@@ -17,7 +17,7 @@
   <style type="text/css">
     #compass {
       position: relative;
-      height: 80%;
+      height: 70%;
       width: 100%;
       overflow: hidden;
       box-sizing: border-box;
@@ -52,8 +52,7 @@
       width: 100%;
       /* border-box ensures 100% includes any rogue padding and it doesn't overrun the page */
       box-sizing: border-box;
-      /*border-style: solid;*/
-      font-size: large;
+      /*font-size: large;*/
     }
     #slider {
       position: absolute;
@@ -67,8 +66,23 @@
       left: 0;
       width: 100%;
     }
+    #startstop_container {
+      position: relative;
+      height: 10%;
+      width: 100%;
+      box-sizing: border-box;
+      /*display: flex;*/
+    }
+    #statstop {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
     #message {
-      font-size: large;
+      /*font-size: large;*/
+      position: absolute;
+      top: 0;
+      right: 0;
     }
   </style>
   <!-- Positioning:
@@ -244,33 +258,49 @@
     <input id="slider"  type="range"  min="0" max="359" value="0">
     <input id="heading" type="number" min="0" max="359" value="0">
   </dir>
-  <div id="message">Heading will display here</div>
+  <div id="startstop_container">
+    <button id="startstop" type="button">Start Track</button>
+    <div id="message">Heading will display here</div>
+  </div>
 
   <script type="text/javascript">
+    // Globals
     var ver = 2;
-    var message = document.getElementById('message');
-    var rose    = document.getElementById('rose_container');
-    var needle  = document.getElementById('needle_container');
-    var slider  = document.getElementById('slider');
-    var heading = document.getElementById('heading');
+    var track = [];
+
+    // Get element objects
+    var message   = document.getElementById('message');
+    var rose      = document.getElementById('rose_container');
+    var needle    = document.getElementById('needle_container');
+    var slider    = document.getElementById('slider');
+    var heading   = document.getElementById('heading');
+    var startstop = document.getElementById('startstop');
 
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
         var rotation = 0;
         if (event.webkitCompassHeading) {
-          message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
+          // message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
+          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading.toPrecision(0);
           rotation = event.webkitCompassHeading;
         } else if (event.alpha) {
-          message.innerHTML = "Alpha("+ver+"): " + event.alpha;
+          // message.innerHTML = "Alpha("+ver+"): " + event.alpha;
+          message.innerHTML = "Alpha: " + event.alpha.toPrecision(0);
           rotation = event.alpha;
         } else {
-          message.innerHTML = "Alpha("+ver+") is undefined ";
+          // message.innerHTML = "Alpha("+ver+") is undefined ";
+          message.innerHTML = "Alpha is undefined";
+        }
+        if (track.length > 0) {
+          var latlong = track[track.length-1];
+          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toPrecision(2)+", "+latlong[1].toPrecision(2);
         }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
       });
     } else {
-      message.innerHTML = "Device orientation not supported. :-("
+      // message.innerHTML = "Device orientation not supported. :-("
+      window.alert("Device orientation not supported. :-(");
     }
 
     slider.addEventListener('input', function() {
@@ -282,6 +312,32 @@
         rose.style.transform = "rotate("+heading.value+"deg)";
         slider.value = heading.value;
     })
+
+    startstop.addEventListener('click', function() {
+      if (startstop.innerHTML == "Start Track") {
+        startstop.innerHTML = "Stop Track"
+        if (navigator.geolocation) {
+          track = [];
+          navigator.geolocation.getCurrentPosition(function(position) {
+            track.push([position.coords.latitude,position.coords.longitude]);
+          })
+          navigator.geolocation.watchPosition(function(position) {
+            track.push([position.coords.latitude,position.coords.longitude]);
+          })
+        } else {
+          window.alert("Geolocation is not supported. :-(")
+        }
+      } else {
+        startstop.innerHTML = "Start Track"
+        var str = "";
+        for (var i = 0; i < track.length; i++) {
+          latlong = track[i];
+          str = latlong[0]+", "+latlong[1]+"\n";
+        }
+        alert(str);
+      }
+    })
+
   </script>
 
 </body>
