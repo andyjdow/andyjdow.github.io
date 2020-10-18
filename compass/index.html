@@ -281,11 +281,11 @@
         var rotation = 0;
         if (event.webkitCompassHeading) {
           // message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
-          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading.toPrecision(0);
+          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading;
           rotation = event.webkitCompassHeading;
         } else if (event.alpha) {
           // message.innerHTML = "Alpha("+ver+"): " + event.alpha;
-          message.innerHTML = "Alpha: " + event.alpha.toPrecision(0);
+          message.innerHTML = "Alpha: " + event.alpha;
           rotation = event.alpha;
         } else {
           // message.innerHTML = "Alpha("+ver+") is undefined ";
