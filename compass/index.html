@@ -422,16 +422,17 @@
             } else {
               scale =  track_draw.height / latRange; // Y
             }
-            message.innerHTML = latRange + ", " + longRange + ", " + track_draw.width + ", " + track_draw.height + ", " + scale + "\n";
+            str = latRange + ", " + longRange + ", " + track_draw.width + ", " + track_draw.height + ", " + scale + "\n";
             track_draw.moveTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
             for (var i = 1; i < track.length; i++) {
               let latlong = track[i];
               let x = (latlong[i][1]-minLong)*scale;
               let y = (latlong[i][0]-minLat)*scale;
-              message.innerHTML = message.innerHTML + x + " - " + y + "\n";
+              str = str + x + " - " + y + "\n";
               track_draw.lineTo(x,y);
               track_draw.stroke();
             }
+            alert(str);
           }
         }
       }
