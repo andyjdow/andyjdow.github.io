@@ -314,10 +314,11 @@
           // message.innerHTML = "Alpha is undefined";
           message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
         }
-        if (track.length > 0) {
-          let latlong = track[track.length-1];
-          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(4)+", "+latlong[1].toFixed(4);
-        }
+        // Requires too high a precision to see motion and display well
+        // if (track.length > 0) {
+        //   let latlong = track[track.length-1];
+        //   message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(4)+", "+latlong[1].toFixed(4);
+        // }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
       });
@@ -360,7 +361,10 @@
           var sample_location = navigator.geolocation.watchPosition(function(position) {
             console.log(position.coords.latitude+","+position.coords.longitude)
             // TODO: Add check that we've moved before adding new location
-            track.push([position.coords.latitude,position.coords.longitude]);
+            let lastLatLong = track[track.length-1];
+            if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude) {
+              track.push([position.coords.latitude,position.coords.longitude]);
+            }
           },
           function(error) {
             alert(error.code+": "+error.message);
@@ -420,7 +424,9 @@
             }
             track_draw.moveTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
             for (var i = 1; i < track.length; i++) {
-              track_draw.lineTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
+              let x = (track[i][1]-minLong)*scale;
+              let y = (track[i][0]-minLat)*scale;
+              track_draw.lineTo(x,y);
               track_draw.stroke();
             }
           }
