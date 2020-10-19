@@ -46,6 +46,20 @@
       height: 100%;
       width: 100%;
     }
+    #track_container {
+      position: relative;
+      height: 80%;
+      width: 100%;
+      /* Is below necessary ? */
+      overflow: hidden;
+      box-sizing: border-box;
+      /*visibility: hidden;*/
+      display: none;
+    }
+    #track {
+      height: 100%;
+      width: 100%;
+    }
     #heading_container {
       position: relative;
       height: 10%;
@@ -255,6 +269,9 @@
       </svg>
     </div>
   </div>
+  <div id="track_container">
+    <canvas id="track"></canvas>
+  </div>
   <dir id="heading_container">
     <input id="slider"  type="range"  min="0" max="359" value="0">
     <input id="heading" type="number" min="0" max="359" value="0">
@@ -270,12 +287,16 @@
     var track = [];
 
     // Get element objects
-    var message   = document.getElementById('message');
-    var rose      = document.getElementById('rose_container');
-    var needle    = document.getElementById('needle_container');
-    var slider    = document.getElementById('slider');
-    var heading   = document.getElementById('heading');
-    var startstop = document.getElementById('startstop');
+    var message           = document.getElementById('message');
+    var rose              = document.getElementById('rose_container');
+    var needle            = document.getElementById('needle_container');
+    var slider            = document.getElementById('slider');
+    var heading_container = document.getElementById('heading_container');
+    var heading           = document.getElementById('heading');
+    var startstop         = document.getElementById('startstop');
+    var track_container   = document.getElementById('track_container');
+    var track_canvas      = document.getElementById('track');
+    var track_draw        = track_canvas.getContext("2d");
 
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
@@ -294,8 +315,8 @@
           message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
         }
         if (track.length > 0) {
-          var latlong = track[track.length-1];
-          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(2)+", "+latlong[1].toFixed(2);
+          let latlong = track[track.length-1];
+          message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(4)+", "+latlong[1].toFixed(4);
         }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
@@ -325,8 +346,10 @@
         };
         if (navigator.geolocation) {
           track = [];
+          console.log("Starting geolocation...")
           // Starting location
           navigator.geolocation.getCurrentPosition(function(position) {
+            console.log(position.coords.latitude+","+position.coords.longitude)
             track.push([position.coords.latitude,position.coords.longitude]);
           },
           function(error) {
@@ -334,18 +357,9 @@
           },
           options);
           // Update as we move
-          // o Tried using navigator.geolocation.watchPosition but wasn't updating on my phone so
-          //   switched to using setInterval to continually sample the location
-          // var sample_location = window.setInterval(function() {
-          //     navigator.geolocation.getCurrentPosition(function(position) {
-          //       track.push([position.coords.latitude,position.coords.longitude]);
-          //     },
-          //     function(error) {
-          //       alert(error.code+": "+error.message);
-          //     },
-          //     options);
-          // },500);
           var sample_location = navigator.geolocation.watchPosition(function(position) {
+            console.log(position.coords.latitude+","+position.coords.longitude)
+            // TODO: Add check that we've moved before adding new location
             track.push([position.coords.latitude,position.coords.longitude]);
           },
           function(error) {
@@ -355,16 +369,62 @@
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
+      } else if (startstop.innerHTML == "Done") {
+        startstop.innerHTML = "Start Track"
+        compass.style.display = "block";
+        heading_container.style = "block";
+        track_container.style.display= "none";
       } else {
         startstop.innerHTML = "Start Track"
         navigator.geolocation.clearWatch(sample_location);
-        // window.clearTimeout(sample_location);
         var str = "Samples: "+track.length+"\n";
         for (var i = 0; i < track.length; i++) {
-          latlong = track[i];
+          let latlong = track[i];
           str = str+ latlong[0]+", "+latlong[1]+"\n";
         }
         alert(str);
+        if (track.length > 0) {
+          if (confirm("View track?")) {
+            // Using display to hide but apparently it means we can't use transitions, may want to revisit
+            compass.style.display = "none";
+            heading_container.style.display = "none";
+            track_container.style.display= "block";
+            startstop.innerHTML = "Done";
+            // Draw track
+            let maxLat  = track[0][0];
+            let minLat  = track[0][0];
+            let maxLong = track[0][1];
+            let minLong = track[0][1];
+            for (var i = 1; i < track.length; i++) {
+              let latlong = track[i];
+              if (latlong[0] > maxLat) {
+                maxLat = latlong[0];
+              }
+              if (latlong[0] < minLat) {
+                minLat = latlong[0];
+              }
+              if (latlong[1] > maxLong) {
+                maxLong = latlong[1];
+              }
+              if (latlong[1] < minLong) {
+                minLong = latlong[1];
+              }
+            }
+            let latRange  = maxLat  - minLat;
+            let longRange = maxLong - minLong;
+            let scale = 1;
+            if (track_draw.width < track_draw.height) {
+              scale =  track_draw.width / longRange; // X
+            } else {
+              scale =  track_draw.height / latRange; // Y
+            }
+            track_draw.moveTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
+            for (var i = 1; i < track.length; i++) {
+              track_draw.lineTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
+              track_draw.stroke();
+            }
+          }
+        }
       }
     })
 
