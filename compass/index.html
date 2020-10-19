@@ -417,12 +417,12 @@
             let latRange  = maxLat  - minLat;
             let longRange = maxLong - minLong;
             let scale = 1;
-            if (track_draw.width < track_draw.height) {
-              scale =  track_draw.width / longRange; // X
+            if (track_canvas.width < track_canvas.height) {
+              scale =  track_canvas.width / longRange; // X
             } else {
-              scale =  track_draw.height / latRange; // Y
+              scale =  track_canvas.height / latRange; // Y
             }
-            str = latRange + ", " + longRange + ", " + track_draw.width + ", " + track_draw.height + ", " + scale + "\n";
+            str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale + "\n";
             track_draw.moveTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
             for (var i = 1; i < track.length; i++) {
               let latlong = track[i];
