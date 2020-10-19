@@ -424,15 +424,18 @@
             }
             str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
             alert(str);
-            track_draw.moveTo((track[0][1]-minLong)*scale,(track[0][0]-minLat)*scale);
-            for (var i = 1; i < track.length; i++) {
+            for (var i = 0; i < track.length; i++) {
               let latlong = track[i];
               let x = (latlong[i][1]-minLong)*scale;
               let y = (latlong[i][0]-minLat)*scale;
-              str = x + " - " + y;
+              str = latlong[i][1] + ", " + minLong + ", " + latlong[i][1] + ", " + minLong + ": " + x + " - " + y;
               alert(str);
-              track_draw.lineTo(x,y);
-              track_draw.stroke();
+              if (i==0) {
+                track_draw.moveTo(x,y);
+              } else {
+                track_draw.lineTo(x,y);
+                track_draw.stroke();
+              }
             }
             alert(str);
           }
