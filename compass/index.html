@@ -336,32 +336,33 @@
           // Update as we move
           // o Tried using navigator.geolocation.watchPosition but wasn't updating on my phone so
           //   switched to using setInterval to continually sample the location
-          window.setInterval(function() {
-              navigator.geolocation.getCurrentPosition(function(position) {
-                track.push([position.coords.latitude,position.coords.longitude]);
-              },
-              function(error) {
-                alert(error.code+": "+error.message);
-              },
-              options);
-          },500);
-          // navigator.geolocation.watchPosition(function(position) {
-          //   track.push([position.coords.latitude,position.coords.longitude]);
-          // },
-          // function(error) {
-          //   alert(error.code+": "+error.message);
-          // },
-          // options);
+          // var sample_location = window.setInterval(function() {
+          //     navigator.geolocation.getCurrentPosition(function(position) {
+          //       track.push([position.coords.latitude,position.coords.longitude]);
+          //     },
+          //     function(error) {
+          //       alert(error.code+": "+error.message);
+          //     },
+          //     options);
+          // },500);
+          var sample_location = navigator.geolocation.watchPosition(function(position) {
+            track.push([position.coords.latitude,position.coords.longitude]);
+          },
+          function(error) {
+            alert(error.code+": "+error.message);
+          },
+          options);
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
       } else {
         startstop.innerHTML = "Start Track"
-        // navigator.geolocation.clearWatch()
-        var str = "";
+        navigator.geolocation.clearWatch(sample_location);
+        // window.clearTimeout(sample_location);
+        var str = "Samples: "+track.length+"\n";
         for (var i = 0; i < track.length; i++) {
           latlong = track[i];
-          str = latlong[0]+", "+latlong[1]+"\n";
+          str = str+ latlong[0]+", "+latlong[1]+"\n";
         }
         alert(str);
       }
