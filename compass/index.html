@@ -318,23 +318,40 @@
     startstop.addEventListener('click', function() {
       if (startstop.innerHTML == "Start Track") {
         startstop.innerHTML = "Stop Track"
+        let options = {
+          enableHighAccuracy: true,
+          timeout: Infinity,
+          maximumAge: 0
+        };
         if (navigator.geolocation) {
           track = [];
+          // Starting location
           navigator.geolocation.getCurrentPosition(function(position) {
-            track.push([position.coords.latitude,position.coords.longitude]);
-          })
-          let options = {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          };
-          navigator.geolocation.watchPosition(function(position) {
             track.push([position.coords.latitude,position.coords.longitude]);
           },
           function(error) {
             alert(error.code+": "+error.message);
           },
           options);
+          // Update as we move
+          // o Tried using navigator.geolocation.watchPosition but wasn't updating on my phone so
+          //   switched to using setInterval to continually sample the location
+          window.setInterval(function() {
+              navigator.geolocation.getCurrentPosition(function(position) {
+                track.push([position.coords.latitude,position.coords.longitude]);
+              },
+              function(error) {
+                alert(error.code+": "+error.message);
+              },
+              options);
+          },500);
+          // navigator.geolocation.watchPosition(function(position) {
+          //   track.push([position.coords.latitude,position.coords.longitude]);
+          // },
+          // function(error) {
+          //   alert(error.code+": "+error.message);
+          // },
+          // options);
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
