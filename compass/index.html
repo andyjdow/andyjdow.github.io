@@ -65,6 +65,7 @@
       bottom: 0;
       left: 0;
       width: 100%;
+      text-align: center;
     }
     #startstop_container {
       position: relative;
@@ -281,15 +282,16 @@
         var rotation = 0;
         if (event.webkitCompassHeading) {
           // message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
-          message.innerHTML = "CompassHeading: " + event.webkitCompassHeading.toFixed(0);
+          message.innerHTML = "Heading: " + event.webkitCompassHeading.toFixed(0);
           rotation = event.webkitCompassHeading;
         } else if (event.alpha) {
           // message.innerHTML = "Alpha("+ver+"): " + event.alpha;
-          message.innerHTML = "Alpha: " + event.alpha.toFixed(0);
+          message.innerHTML = "Heading: " + event.alpha.toFixed(0);
           rotation = event.alpha;
         } else {
           // message.innerHTML = "Alpha("+ver+") is undefined ";
-          message.innerHTML = "Alpha is undefined";
+          // message.innerHTML = "Alpha is undefined";
+          message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
         }
         if (track.length > 0) {
           var latlong = track[track.length-1];
@@ -321,19 +323,18 @@
           navigator.geolocation.getCurrentPosition(function(position) {
             track.push([position.coords.latitude,position.coords.longitude]);
           })
-          // options = {
-          //   enableHighAccuracy: true,
-          //   timeout: 5000,
-          //   maximumAge: 0
-          // };
+          let options = {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
+          };
           navigator.geolocation.watchPosition(function(position) {
             track.push([position.coords.latitude,position.coords.longitude]);
-          });
-          // ,
-          // function(error) {
-          //   alert(error.code+": "+error.message);
-          // },
-          // options);
+          },
+          function(error) {
+            alert(error.code+": "+error.message);
+          },
+          options);
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
