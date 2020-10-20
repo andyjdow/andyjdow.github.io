@@ -394,6 +394,10 @@
             heading_container.style.display = "none";
             track_container.style.display= "block";
             startstop.innerHTML = "Done";
+            // Clear any existing track
+            track_draw.clearRect(0,0,track_draw.width,track_draw.height);
+            //
+            track_draw.imageSmoothingEnabled = false;
             // Draw track
             let maxLat  = track[0][0];
             let minLat  = track[0][0];
