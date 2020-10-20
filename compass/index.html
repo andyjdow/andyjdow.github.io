@@ -416,20 +416,22 @@
             }
             let latRange  = maxLat  - minLat;
             let longRange = maxLong - minLong;
+            let scaleLat  = track_canvas.height / latRange;
+            let scaleLong = track_canvas.width / longRange;
             let scale = 1;
-            if (track_canvas.width < track_canvas.height) {
-              scale =  track_canvas.width / longRange; // X
+            if (scaleLat < scaleLong) {
+              scale = scaleLat;
             } else {
-              scale =  track_canvas.height / latRange; // Y
+              scale = scaleLong;
             }
-            str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
+            // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
             alert(str);
             for (var i = 0; i < track.length; i++) {
               let latlong = track[i];
               let x = (latlong[1]-minLong)*scale;
               let y = (latlong[0]-minLat)*scale;
               str = latlong[1] + ", " + minLong + ", " + latlong[0] + ", " + minLat + ": " + x + " - " + y;
-              alert(str);
+              // alert(str);
               if (i==0) {
                 track_draw.moveTo(x,y);
               } else {
@@ -437,7 +439,7 @@
                 track_draw.stroke();
               }
             }
-            alert(str);
+            // alert(str);
           }
         }
       }
