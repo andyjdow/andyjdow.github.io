@@ -426,9 +426,9 @@
             alert(str);
             for (var i = 0; i < track.length; i++) {
               let latlong = track[i];
-              let x = (latlong[i][1]-minLong)*scale;
-              let y = (latlong[i][0]-minLat)*scale;
-              str = latlong[i][1] + ", " + minLong + ", " + latlong[i][1] + ", " + minLong + ": " + x + " - " + y;
+              let x = (latlong[1]-minLong)*scale;
+              let y = (latlong[0]-minLat)*scale;
+              str = latlong[1] + ", " + minLong + ", " + latlong[0] + ", " + minLat + ": " + x + " - " + y;
               alert(str);
               if (i==0) {
                 track_draw.moveTo(x,y);
