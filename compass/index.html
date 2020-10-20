@@ -329,11 +329,11 @@
 
     slider.addEventListener('input', function() {
       heading.value = slider.value;
-      rose.style.transform = "rotate("+slider.value+"deg)";
+      rose.style.transform = "rotate(-"+slider.value+"deg)";
     })
 
     heading.addEventListener('input', function() {
-        rose.style.transform = "rotate("+heading.value+"deg)";
+        rose.style.transform = "rotate(-"+heading.value+"deg)";
         slider.value = heading.value;
     })
 
