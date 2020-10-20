@@ -386,7 +386,7 @@
           let latlong = track[i];
           str = str+ latlong[0]+", "+latlong[1]+"\n";
         }
-        alert(str);
+        // alert(str);
         if (track.length > 0) {
           if (confirm("View track?")) {
             // Using display to hide but apparently it means we can't use transitions, may want to revisit
@@ -425,7 +425,7 @@
               scale = scaleLong;
             }
             // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
-            alert(str);
+            // alert(str);
             for (var i = 0; i < track.length; i++) {
               let latlong = track[i];
               let x = (latlong[1]-minLong)*scale;
