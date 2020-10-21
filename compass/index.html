@@ -352,7 +352,7 @@
           navigator.geolocation.getCurrentPosition(function(position) {
             console.log(position.coords.latitude+","+position.coords.longitude)
             track.push([position.coords.latitude,position.coords.longitude]);
-            alert("GPS locked");
+            // alert("GPS locked");
           },
           function(error) {
             alert(error.code+": "+error.message);
@@ -396,7 +396,7 @@
             startstop.innerHTML = "Done";
             // Clear any existing track
             if (confirm("Clear?")) {
-              track_draw.clearRect(0,0,track_draw.width,track_draw.height);
+              track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
             }
             //
             track_draw.imageSmoothingEnabled = false;
@@ -435,7 +435,7 @@
             for (var i = 0; i < track.length; i++) {
               let latlong = track[i];
               let x = (latlong[1]-minLong)*scale;
-              let y = (latlong[0]-minLat)*scale;
+              let y = track_canvas.height - (latlong[0]-minLat)*scale;
               str = latlong[1] + ", " + minLong + ", " + latlong[0] + ", " + minLat + ": " + x + " - " + y;
               // alert(str);
               if (i==0) {
