@@ -338,7 +338,7 @@
             dist            = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
           }
           // 0.00001 approx to 1 metre
-          if (dist > 0.00002 || dist == -1) {
+          if (dist > 0.00001 || dist == -1) {
             // Log
             console.log("Inst "+inst+": "+lat+","+lng);
             track.push([lat,lng]);
