@@ -331,9 +331,18 @@
           }
           lat = lat / sample_cnt.length;
           lng = lng / sample_cnt.length;
-
-          console.log("Inst "+inst+": "+lat+","+lng);
-          track.push([lat,lng]);
+          // Have we moved enough?
+          let dist = -1;
+          if (track.length > 0) {
+            let prev_latlng = track[track.length-1];
+            dist            = Math.sqrt(Math.pow(lat-prev_latlng[0])+Math.pow(lng-prev_latlng[1]));
+          }
+          // 0.00001 approx to 1 metre
+          if (dist > 0.00002 || dist == -1) {
+            // Log
+            console.log("Inst "+inst+": "+lat+","+lng);
+            track.push([lat,lng]);
+          }
         }
       },
       function(error) {
