@@ -298,6 +298,50 @@
     var track_canvas      = document.getElementById('track');
     var track_draw        = track_canvas.getContext("2d");
 
+    var sampler1          = -1;
+    var sampler2          = -1;
+    var sampler3          = -1;
+
+    var sample_cnt        = [-1, -1, -1];
+    var sample            = [0 , 0 ,  0];
+    function sample_location(inst) {
+      // console.log("Sampler "+inst);
+      let options = {
+        enableHighAccuracy: true,
+        timeout: Infinity,
+        maximumAge: 0
+      };
+      navigator.geolocation.getCurrentPosition(function(position) {
+        sample_cnt[inst]++;
+        sample[inst] = position.coords; 
+        let log_sample = true;
+        let cnt_test   = sample_cnt[inst]; 
+        for (var i = 0; i < sample_cnt.length; i++) {
+          if (sample_cnt[i] != cnt_test) {
+            log_sample = false;
+          }
+        }
+        if (log_sample) {
+          // Average samples then log
+          let lat = 0;
+          let lng = 0;
+          for (var i = 0; i < sample_cnt.length; i++) {
+            lat += sample[inst].latitude;
+            lng += sample[inst].longitude;
+          }
+          lat = lat / sample_cnt.length;
+          lng = lng / sample_cnt.length;
+
+          console.log("Inst "+inst+": "+lat+","+lng);
+          track.push([lat,lng]);
+        }
+      },
+      function(error) {
+        alert(error.code+": "+error.message);
+      },
+      options);
+    }; // end sample_location
+
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
         var rotation = 0;
@@ -311,7 +355,6 @@
           rotation = event.alpha;
         } else {
           // message.innerHTML = "Alpha("+ver+") is undefined ";
-          // message.innerHTML = "Alpha is undefined";
           message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
         }
         // Requires too high a precision to see motion and display well
@@ -323,7 +366,6 @@
         needle.style.transform = "rotate("+rotation+"deg)";
       });
     } else {
-      // message.innerHTML = "Device orientation not supported. :-("
       window.alert("Device orientation not supported. :-(");
     }
 
@@ -333,43 +375,47 @@
     })
 
     heading.addEventListener('input', function() {
-        rose.style.transform = "rotate(-"+heading.value+"deg)";
-        slider.value = heading.value;
+      rose.style.transform = "rotate(-"+heading.value+"deg)";
+      slider.value = heading.value;
     })
 
     startstop.addEventListener('click', function() {
       if (startstop.innerHTML == "Start Track") {
         startstop.innerHTML = "Stop Track"
-        let options = {
-          enableHighAccuracy: true,
-          timeout: Infinity,
-          maximumAge: 0
-        };
+        // let options = {
+        //   enableHighAccuracy: true,
+        //   timeout: Infinity,
+        //   maximumAge: 0
+        // };
         if (navigator.geolocation) {
           track = [];
           console.log("Starting geolocation...")
-          // Starting location
-          navigator.geolocation.getCurrentPosition(function(position) {
-            console.log(position.coords.latitude+","+position.coords.longitude)
-            track.push([position.coords.latitude,position.coords.longitude]);
-            // alert("GPS locked");
-          },
-          function(error) {
-            alert(error.code+": "+error.message);
-          },
-          options);
-          // Now enable tracking as we move 
-          var sample_location = navigator.geolocation.watchPosition(function(position) {
-            console.log(position.coords.latitude+","+position.coords.longitude)
-            let lastLatLong = track[track.length-1];
-            if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude && track.length > 0) {
-              track.push([position.coords.latitude,position.coords.longitude]);
-            }
-          },
-          function(error) {
-            alert(error.code+": "+error.message);
-          },
-          options);
+          // // Start location
+          // navigator.geolocation.getCurrentPosition(function(position) {
+          //     console.log(position.coords.latitude+","+position.coords.longitude)
+          //     track.push([position.coords.latitude,position.coords.longitude]);
+          //   },
+          //   function(error) {
+          //     alert(error.code+": "+error.message);
+          //   },
+          //   options);
+          // // Now enable tracking as we move 
+          // var sample_location = navigator.geolocation.watchPosition(function(position) {
+          //     console.log(position.coords.latitude+","+position.coords.longitude)
+          //     let lastLatLong = track[track.length-1];
+          //     if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude && track.length > 0) {
+          //       track.push([position.coords.latitude,position.coords.longitude]);
+          //     }
+          //   },
+          //   function(error) {
+          //     alert(error.code+": "+error.message);
+          //   },
+          //   options);
+          // Used time based sampling
+          // o Using 3 "samplers" to try to generate a more accurate location
+          sampler1 = setInterval(sample_location,500,0);
+          sampler2 = setInterval(sample_location,500,1);
+          sampler3 = setInterval(sample_location,500,2);
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
@@ -380,13 +426,16 @@
         track_container.style.display= "none";
       } else {
         startstop.innerHTML = "Start Track"
-        navigator.geolocation.clearWatch(sample_location);
+        // navigator.geolocation.clearWatch(sample_location);
+        clearInterval(sampler1);
+        clearInterval(sampler2);
+        clearInterval(sampler3);
         var str = "Samples: "+track.length+"\n";
         for (var i = 0; i < track.length; i++) {
           let latlong = track[i];
           str = str+ latlong[0]+", "+latlong[1]+"\n";
         }
-        // alert(str);
+        alert(str);
         if (track.length > 0) {
           if (confirm("View track?")) {
             // Using display to hide but apparently it means we can't use transitions, may want to revisit
