@@ -281,7 +281,8 @@
     <input id="samplers" type="number" value="3">
     <div id="message">Heading will display here</div>
   </div>
-
+  <div id="debug">
+  </div>
   <script type="text/javascript">
     // Globals
     var ver = 2;
@@ -298,6 +299,7 @@
     var track_canvas      = document.getElementById('track');
     var track_draw        = track_canvas.getContext("2d");
     var samplers          = document.getElementById('samplers');
+    var debug             = document.getElementById('debug');
     
     var track = [];
 
@@ -471,12 +473,13 @@
           lng = lng / samplers.value;
           av_track.push([lat,lng]);
         }
-        var str = "Samples: "+av_track.length+"\n";
+        var str = "Samples: "+av_track.length+"</br>";
         for (var i = 0; i < av_track.length; i++) {
           let latlong = av_track[i];
-          str = str+ latlong[0]+", "+latlong[1]+"\n";
+          str = str+ latlong[0]+", "+latlong[1]+"</br>";
         }
-        alert(str);
+        // alert(str);
+        debug.innerHTML = str;
         if (av_track.length > 0) {
           if (confirm("View track?")) {
             // Using display to hide but apparently it means we can't use transitions, may want to revisit
