@@ -278,13 +278,13 @@
   </dir>
   <div id="startstop_container">
     <button id="startstop" type="button">Start Track</button>
+    <input id="samplers" type="number" value="3">
     <div id="message">Heading will display here</div>
   </div>
 
   <script type="text/javascript">
     // Globals
     var ver = 2;
-    var track = [];
 
     // Get element objects
     var message           = document.getElementById('message');
@@ -297,13 +297,17 @@
     var track_container   = document.getElementById('track_container');
     var track_canvas      = document.getElementById('track');
     var track_draw        = track_canvas.getContext("2d");
+    var samplers          = document.getElementById('samplers');
+    
+    var track = [];
 
-    var sampler1          = -1;
-    var sampler2          = -1;
-    var sampler3          = -1;
+    var sampler = [];
+    // var sampler1          = -1;
+    // var sampler2          = -1;
+    // var sampler3          = -1;
 
-    var sample_cnt        = [-1, -1, -1];
-    var sample            = [0 , 0 ,  0];
+    // var sample_cnt        = [-1, -1, -1];
+    // var sample            = [0 , 0 ,  0];
     function sample_location(inst) {
       // console.log("Sampler "+inst);
       let options = {
@@ -312,38 +316,39 @@
         maximumAge: 0
       };
       navigator.geolocation.getCurrentPosition(function(position) {
-        sample_cnt[inst]++;
-        sample[inst] = position.coords; 
-        let log_sample = true;
-        let cnt_test   = sample_cnt[inst]; 
-        for (var i = 0; i < sample_cnt.length; i++) {
-          if (sample_cnt[i] != cnt_test) {
-            log_sample = false;
-          }
-        }
-        if (log_sample) {
-          // Average samples then log
-          let lat = 0;
-          let lng = 0;
-          for (var i = 0; i < sample_cnt.length; i++) {
-            lat += sample[inst].latitude;
-            lng += sample[inst].longitude;
-          }
-          lat = lat / sample_cnt.length;
-          lng = lng / sample_cnt.length;
-          // Have we moved enough?
-          let dist = -1;
-          if (track.length > 0) {
-            let prev_latlng = track[track.length-1];
-            dist            = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
-          }
-          // 0.00001 approx to 1 metre
-          if (dist > 0.00001 || dist == -1) {
-            // Log
-            console.log("Inst "+inst+": "+lat+","+lng);
-            track.push([lat,lng]);
-          }
-        }
+        // sample_cnt[inst]++;
+        // sample[inst] = position.coords; 
+        // let log_sample = true;
+        // let cnt_test   = sample_cnt[inst]; 
+        // for (var i = 0; i < sample_cnt.length; i++) {
+        //   if (sample_cnt[i] != cnt_test) {
+        //     log_sample = false;
+        //   }
+        // }
+        // if (log_sample) {
+        //   // Average samples then log
+        //   let lat = 0;
+        //   let lng = 0;
+        //   for (var i = 0; i < sample_cnt.length; i++) {
+        //     lat += sample[inst].latitude;
+        //     lng += sample[inst].longitude;
+        //   }
+        //   lat = lat / sample_cnt.length;
+        //   lng = lng / sample_cnt.length;
+        //   // Have we moved enough?
+        //   let dist = -1;
+        //   if (track.length > 0) {
+        //     let prev_latlng = track[track.length-1];
+        //     dist            = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
+        //   }
+        //   // 0.00001 approx to 1 metre
+        //   if (dist > 0.00001 || dist == -1) {
+        //     // Log
+        //     console.log("Inst "+inst+": "+lat+","+lng);
+        //     track.push([lat,lng]);
+        //   }
+        // }
+        track[inst].push([position.coords.latitude,position.coords.longitude]);
       },
       function(error) {
         alert(error.code+": "+error.message);
@@ -422,9 +427,15 @@
           //   options);
           // Used time based sampling
           // o Using 3 "samplers" to try to generate a more accurate location
-          sampler1 = setInterval(sample_location,500,0);
-          sampler2 = setInterval(sample_location,500,1);
-          sampler3 = setInterval(sample_location,500,2);
+          // sampler1 = setInterval(sample_location,500,0);
+          // sampler2 = setInterval(sample_location,500,1);
+          // sampler3 = setInterval(sample_location,500,2);
+          sampler = [];
+          for (var i = 0; i < samplers.value; i++) {
+            track.push([]);
+            let s = setInterval(sample_location,500,i);
+            sampler.push(s);
+          }
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
@@ -436,16 +447,37 @@
       } else {
         startstop.innerHTML = "Start Track"
         // navigator.geolocation.clearWatch(sample_location);
-        clearInterval(sampler1);
-        clearInterval(sampler2);
-        clearInterval(sampler3);
-        var str = "Samples: "+track.length+"\n";
-        for (var i = 0; i < track.length; i++) {
-          let latlong = track[i];
+        // clearInterval(sampler1);
+        // clearInterval(sampler2);
+        // clearInterval(sampler3);
+        let min_track = track[0].length;
+        for (var i = 1; i < samplers.value; i++) {
+          clearInterval(sampler[i]);
+          if (track[i].length < min_track) {
+            min_track = track[i].length;
+          }
+        }
+        let av_track = [];
+        // Calculate "average" track
+        for (var i = 0; i < min_track; i++) {
+          let lat = 0;
+          let lng = 0;
+          for (var j = 0; j < samplers.value; j++) {
+            let latlng = track[j][i];
+            lat += latlng[0];
+            lng += latlng[1];
+          }
+          lat = lat / samplers.value;
+          lng = lng / samplers.value;
+          av_track.push([lat,lng]);
+        }
+        var str = "Samples: "+av_track.length+"\n";
+        for (var i = 0; i < av_track.length; i++) {
+          let latlong = av_track[i];
           str = str+ latlong[0]+", "+latlong[1]+"\n";
         }
         alert(str);
-        if (track.length > 0) {
+        if (av_track.length > 0) {
           if (confirm("View track?")) {
             // Using display to hide but apparently it means we can't use transitions, may want to revisit
             compass.style.display = "none";
@@ -459,12 +491,12 @@
             //
             track_draw.imageSmoothingEnabled = false;
             // Draw track
-            let maxLat  = track[0][0];
-            let minLat  = track[0][0];
-            let maxLong = track[0][1];
-            let minLong = track[0][1];
-            for (var i = 1; i < track.length; i++) {
-              let latlong = track[i];
+            let maxLat  = av_track[0][0];
+            let minLat  = av_track[0][0];
+            let maxLong = av_track[0][1];
+            let minLong = av_track[0][1];
+            for (var i = 1; i < av_track.length; i++) {
+              let latlong = av_track[i];
               if (latlong[0] > maxLat) {
                 maxLat = latlong[0];
               }
@@ -490,8 +522,8 @@
             }
             // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
             // alert(str);
-            for (var i = 0; i < track.length; i++) {
-              let latlong = track[i];
+            for (var i = 0; i < av_track.length; i++) {
+              let latlong = av_track[i];
               let x = (latlong[1]-minLong)*scale;
               let y = track_canvas.height - (latlong[0]-minLat)*scale;
               str = latlong[1] + ", " + minLong + ", " + latlong[0] + ", " + minLat + ": " + x + " - " + y;
@@ -503,7 +535,7 @@
                 track_draw.lineTo(x,y);
                 track_draw.stroke();
               }
-              if (i == track.length-1) {
+              if (i == av_track.length-1) {
                 track_draw.fillText(""+i,x,y);
               }
             }
