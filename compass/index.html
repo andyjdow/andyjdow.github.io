@@ -550,7 +550,7 @@
               let latlng = av_track[i];
               let x = (latlng[1]-minLng)*scale;
               let y = track_canvas.height - (latlng[0]-minLat)*scale;
-              str = latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
+              str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
               // alert(str);
               if (i==0) {
                 track_draw.moveTo(x,y);
