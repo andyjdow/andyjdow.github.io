@@ -377,8 +377,8 @@
         }
         // Requires too high a precision to see motion and display well
         // if (track.length > 0) {
-        //   let latlong = track[track.length-1];
-        //   message.innerHTML = message.innerHTML + " Latlong: "+latlong[0].toFixed(4)+", "+latlong[1].toFixed(4);
+        //   let latlng = track[track.length-1];
+        //   message.innerHTML = message.innerHTML + " latlng: "+latlng[0].toFixed(4)+", "+latlng[1].toFixed(4);
         // }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
@@ -421,8 +421,8 @@
           // // Now enable tracking as we move 
           sampler = navigator.geolocation.watchPosition(function(position) {
               // console.log(position.coords.latitude+","+position.coords.longitude)
-              // let lastLatLong = track[track.length-1];
-              // if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude && track.length > 0) {
+              // let lastlatlng = track[track.length-1];
+              // if (lastlatlng[0] != position.coords.latitude && lastlatlng[1] != position.coords.longitude && track.length > 0) {
               //   track.push([position.coords.latitude,position.coords.longitude]);
               // }
               
@@ -519,53 +519,52 @@
             // Draw track
             let maxLat  = av_track[0][0];
             let minLat  = av_track[0][0];
-            let maxLong = av_track[0][1];
-            let minLong = av_track[0][1];
+            let maxLng  = av_track[0][1];
+            let minLng  = av_track[0][1];
             for (var i = 1; i < av_track.length; i++) {
-              let latlong = av_track[i];
-              if (latlong[0] > maxLat) {
-                maxLat = latlong[0];
+              let latlng = av_track[i];
+              if (latlng[0] > maxLat) {
+                maxLat = latlng[0];
               }
-              if (latlong[0] < minLat) {
-                minLat = latlong[0];
+              if (latlng[0] < minLat) {
+                minLat = latlng[0];
               }
-              if (latlong[1] > maxLong) {
-                maxLong = latlong[1];
+              if (latlng[1] > maxLng ) {
+                maxLng  = latlng[1];
               }
-              if (latlong[1] < minLong) {
-                minLong = latlong[1];
+              if (latlng[1] < minLng ) {
+                minLng  = latlng[1];
               }
             }
             let latRange  = maxLat  - minLat;
-            let longRange = maxLong - minLong;
+            let lngRange  = maxLng  - minLng;
             let scaleLat  = track_canvas.height / latRange;
-            let scaleLong = track_canvas.width / longRange;
-            let scale = 1;
-            if (scaleLat < scaleLong) {
+            let scaleLng  = track_canvas.width / lngRange;
+            let scale = scaleLng;
+            if (scaleLat < scaleLng) {
               scale = scaleLat;
-            } else {
-              scale = scaleLong;
             }
             // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
             // alert(str);
             for (var i = 0; i < av_track.length; i++) {
-              let latlong = av_track[i];
-              let x = (latlong[1]-minLong)*scale;
-              let y = track_canvas.height - (latlong[0]-minLat)*scale;
-              str = latlong[1] + ", " + minLong + ", " + latlong[0] + ", " + minLat + ": " + x + " - " + y;
+              let latlng = av_track[i];
+              let x = (latlng[1]-minLng)*scale;
+              let y = track_canvas.height - (latlng[0]-minLat)*scale;
+              str = latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
               // alert(str);
               if (i==0) {
                 track_draw.moveTo(x,y);
-                track_draw.fillText(""+i,x,y);
+                // track_draw.fillText(""+i,x,y);
               } else {
                 track_draw.lineTo(x,y);
                 track_draw.stroke();
               }
-              if (i == av_track.length-1) {
-                track_draw.fillText(""+i,x,y);
-              }
+              // if (i == av_track.length-1) {
+              //   track_draw.fillText(""+i,x,y);
+              // }
             }
             // alert(str);
+            debug.innerHTML = str;
           }
         }
       }
