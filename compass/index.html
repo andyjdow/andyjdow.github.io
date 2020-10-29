@@ -301,7 +301,8 @@
     var samplers          = document.getElementById('samplers');
     var debug             = document.getElementById('debug');
     
-    var track = [];
+    var track     = [];
+    var samp_hist = [];
 
     var sampler = [];
     // var sampler1          = -1;
@@ -400,11 +401,11 @@
       if (startstop.innerHTML == "Start Track") {
         startstop.innerHTML = "Stop Track"
         debug.innerHTML = "";
-        // let options = {
-        //   enableHighAccuracy: true,
-        //   timeout: Infinity,
-        //   maximumAge: 0
-        // };
+        let options = {
+          enableHighAccuracy: true,
+          timeout: Infinity,
+          maximumAge: 0
+        };
         if (navigator.geolocation) {
           track = [];
           console.log("Starting geolocation...")
@@ -418,28 +419,41 @@
           //   },
           //   options);
           // // Now enable tracking as we move 
-          // var sample_location = navigator.geolocation.watchPosition(function(position) {
-          //     console.log(position.coords.latitude+","+position.coords.longitude)
-          //     let lastLatLong = track[track.length-1];
-          //     if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude && track.length > 0) {
-          //       track.push([position.coords.latitude,position.coords.longitude]);
-          //     }
-          //   },
-          //   function(error) {
-          //     alert(error.code+": "+error.message);
-          //   },
-          //   options);
+          var sampler = navigator.geolocation.watchPosition(function(position) {
+              // console.log(position.coords.latitude+","+position.coords.longitude)
+              // let lastLatLong = track[track.length-1];
+              // if (lastLatLong[0] != position.coords.latitude && lastLatLong[1] != position.coords.longitude && track.length > 0) {
+              //   track.push([position.coords.latitude,position.coords.longitude]);
+              // }
+              samp_hist.push(position.coords);
+              if (samp_hist.length >= samplers.value) {
+                let lat = 0;
+                let lng = 0;
+                for (var i = 0; i < av_track.length; i++) {
+                  lat += samp_hist[i].latitude;
+                  lng += samp_hist[i].longitude;
+                }
+                lat = lat / samplers.value;
+                lng = lng / samplers.value;
+                track.push([lat,lng]);
+                samp_hist.shift();
+              }
+            },
+            function(error) {
+              alert(error.code+": "+error.message);
+            },
+            options);
           // Used time based sampling
           // o Using 3 "samplers" to try to generate a more accurate location
           // sampler1 = setInterval(sample_location,500,0);
           // sampler2 = setInterval(sample_location,500,1);
           // sampler3 = setInterval(sample_location,500,2);
-          sampler = [];
-          for (var i = 0; i < samplers.value; i++) {
-            track.push([]);
-            let s = setInterval(sample_location,500,i);
-            sampler.push(s);
-          }
+          // sampler = [];
+          // for (var i = 0; i < samplers.value; i++) {
+          //   track.push([]);
+          //   let s = setInterval(sample_location,500,i);
+          //   sampler.push(s);
+          // }
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
@@ -451,36 +465,38 @@
       } else {
         startstop.innerHTML = "Start Track"
         // navigator.geolocation.clearWatch(sample_location);
+        navigator.geolocation.clearWatch(sampler);
         // clearInterval(sampler1);
         // clearInterval(sampler2);
         // clearInterval(sampler3);
-        let min_track = track[0].length;
-        for (var i = 1; i < samplers.value; i++) {
-          clearInterval(sampler[i]);
-          if (track[i].length < min_track) {
-            min_track = track[i].length;
-          }
-        }
+        // let min_track = track[0].length;
+        // for (var i = 0; i < samplers.value; i++) {
+        //   clearInterval(sampler[i]);
+        //   if (track[i].length < min_track) {
+        //     min_track = track[i].length;
+        //   }
+        // }
         var str = "";
-        let av_track = [];
-        // Calculate "average" track
-        for (var i = 0; i < min_track; i++) {
-          let lat = 0;
-          let lng = 0;
-          for (var j = 0; j < samplers.value; j++) {
-            let latlng = track[j][i];
-            lat += latlng[0];
-            lng += latlng[1];
-            str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
-          }
-          lat = lat / samplers.value;
-          lng = lng / samplers.value;
-          av_track.push([lat,lng]);
-        }
+        // let av_track = [];
+        // // Calculate "average" track
+        // for (var i = 0; i < min_track; i++) {
+        //   let lat = 0;
+        //   let lng = 0;
+        //   for (var j = 0; j < samplers.value; j++) {
+        //     let latlng = track[j][i];
+        //     lat += latlng[0];
+        //     lng += latlng[1];
+        //     str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
+        //   }
+        //   lat = lat / samplers.value;
+        //   lng = lng / samplers.value;
+        //   av_track.push([lat,lng]);
+        // }
+        av_track = track;
         str = str + "Samples: "+av_track.length+"</br>";
         for (var i = 0; i < av_track.length; i++) {
-          let latlong = av_track[i];
-          str = str+ latlong[0]+", "+latlong[1]+"</br>";
+          let latlng = av_track[i];
+          str = str+ latlng[0]+", "+latlng[1]+"</br>";
         }
         // alert(str);
         debug.innerHTML = str;
