@@ -459,6 +459,7 @@
             min_track = track[i].length;
           }
         }
+        var str = "";
         let av_track = [];
         // Calculate "average" track
         for (var i = 0; i < min_track; i++) {
@@ -468,12 +469,13 @@
             let latlng = track[j][i];
             lat += latlng[0];
             lng += latlng[1];
+            str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
           }
           lat = lat / samplers.value;
           lng = lng / samplers.value;
           av_track.push([lat,lng]);
         }
-        var str = "Samples: "+av_track.length+"</br>";
+        str = str + "Samples: "+av_track.length+"</br>";
         for (var i = 0; i < av_track.length; i++) {
           let latlong = av_track[i];
           str = str+ latlong[0]+", "+latlong[1]+"</br>";
