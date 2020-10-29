@@ -512,7 +512,8 @@
             startstop.innerHTML = "Done";
             // Clear any existing track
             if (confirm("Clear?")) {
-              track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
+              // track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
+              track_draw.clearRect(0,0,track_container.width,track_container.height);
             }
             //
             track_draw.imageSmoothingEnabled = false;
