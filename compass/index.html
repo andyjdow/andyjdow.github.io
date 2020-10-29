@@ -350,6 +350,7 @@
         //     track.push([lat,lng]);
         //   }
         // }
+        debug.innerHTML = debug.innerHTML + "sampler: "+inst+": "+position.coords.latitude+","+position.coords.longitude+"</br>";
         track[inst].push([position.coords.latitude,position.coords.longitude]);
       },
       function(error) {
@@ -398,6 +399,7 @@
     startstop.addEventListener('click', function() {
       if (startstop.innerHTML == "Start Track") {
         startstop.innerHTML = "Stop Track"
+        debug.innerHTML = "";
         // let options = {
         //   enableHighAccuracy: true,
         //   timeout: Infinity,
