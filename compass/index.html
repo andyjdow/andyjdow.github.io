@@ -48,7 +48,8 @@
     }
     #track_container {
       position: relative;
-      height: 80%;
+      /*height: 80%;*/
+      height: 90%;
       width: 100%;
       /* Is below necessary ? */
       overflow: hidden;
@@ -57,7 +58,20 @@
       display: none;
     }
     #track {
-      height: 100%;
+      /*height: 100%;*/
+      height: 90%;
+      width: 100%;
+    }
+    #average {
+      position: absolute;
+      bottom: 5%;
+      left: 0;
+      width: 100%;
+    }
+    #distance {
+      position: absolute;
+      bottom: 0;
+      left: 0;
       width: 100%;
     }
     #heading_container {
@@ -271,6 +285,8 @@
   </div>
   <div id="track_container">
     <canvas id="track"></canvas>
+    <input id="average"   type="range"  min="1" max="10" value="1">
+    <input id="distance"  type="range"  min="0" max="5"  value="0" step="0.1">
   </div>
   <dir id="heading_container">
     <input id="slider"  type="range"  min="0" max="359" value="0">
@@ -278,7 +294,7 @@
   </dir>
   <div id="startstop_container">
     <button id="startstop" type="button">Start Track</button>
-    <input id="samplers" type="number" value="3">
+    <!-- <input id="samplers" type="number" value="3"> -->
     <div id="message">Heading will display here</div>
   </div>
   <div id="debug">
@@ -298,11 +314,13 @@
     var track_container   = document.getElementById('track_container');
     var track_canvas      = document.getElementById('track');
     var track_draw        = track_canvas.getContext("2d");
-    var samplers          = document.getElementById('samplers');
+    var average           = document.getElementById('average');
+    var distance          = document.getElementById('distance');
+    // var samplers          = document.getElementById('samplers');
     var debug             = document.getElementById('debug');
     
     var track     = [];
-    var samp_hist = [];
+    // var samp_hist = [];
 
     var sampler = [];
     // var sampler1          = -1;
@@ -311,54 +329,139 @@
 
     // var sample_cnt        = [-1, -1, -1];
     // var sample            = [0 , 0 ,  0];
-    function sample_location(inst) {
-      // console.log("Sampler "+inst);
-      let options = {
-        enableHighAccuracy: true,
-        timeout: Infinity,
-        maximumAge: 0
-      };
-      navigator.geolocation.getCurrentPosition(function(position) {
-        // sample_cnt[inst]++;
-        // sample[inst] = position.coords; 
-        // let log_sample = true;
-        // let cnt_test   = sample_cnt[inst]; 
-        // for (var i = 0; i < sample_cnt.length; i++) {
-        //   if (sample_cnt[i] != cnt_test) {
-        //     log_sample = false;
-        //   }
-        // }
-        // if (log_sample) {
-        //   // Average samples then log
-        //   let lat = 0;
-        //   let lng = 0;
-        //   for (var i = 0; i < sample_cnt.length; i++) {
-        //     lat += sample[inst].latitude;
-        //     lng += sample[inst].longitude;
-        //   }
-        //   lat = lat / sample_cnt.length;
-        //   lng = lng / sample_cnt.length;
-        //   // Have we moved enough?
-        //   let dist = -1;
-        //   if (track.length > 0) {
-        //     let prev_latlng = track[track.length-1];
-        //     dist            = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
-        //   }
-        //   // 0.00001 approx to 1 metre
-        //   if (dist > 0.00001 || dist == -1) {
-        //     // Log
-        //     console.log("Inst "+inst+": "+lat+","+lng);
-        //     track.push([lat,lng]);
-        //   }
-        // }
-        debug.innerHTML = debug.innerHTML + "sampler: "+inst+": "+position.coords.latitude+","+position.coords.longitude+"</br>";
-        track[inst].push([position.coords.latitude,position.coords.longitude]);
-      },
-      function(error) {
-        alert(error.code+": "+error.message);
-      },
-      options);
-    }; // end sample_location
+    // function sample_location(inst) {
+    //   // console.log("Sampler "+inst);
+    //   let options = {
+    //     enableHighAccuracy: true,
+    //     timeout: Infinity,
+    //     maximumAge: 0
+    //   };
+    //   navigator.geolocation.getCurrentPosition(function(position) {
+    //     // sample_cnt[inst]++;
+    //     // sample[inst] = position.coords; 
+    //     // let log_sample = true;
+    //     // let cnt_test   = sample_cnt[inst]; 
+    //     // for (var i = 0; i < sample_cnt.length; i++) {
+    //     //   if (sample_cnt[i] != cnt_test) {
+    //     //     log_sample = false;
+    //     //   }
+    //     // }
+    //     // if (log_sample) {
+    //     //   // Average samples then log
+    //     //   let lat = 0;
+    //     //   let lng = 0;
+    //     //   for (var i = 0; i < sample_cnt.length; i++) {
+    //     //     lat += sample[inst].latitude;
+    //     //     lng += sample[inst].longitude;
+    //     //   }
+    //     //   lat = lat / sample_cnt.length;
+    //     //   lng = lng / sample_cnt.length;
+    //     //   // Have we moved enough?
+    //     //   let dist = -1;
+    //     //   if (track.length > 0) {
+    //     //     let prev_latlng = track[track.length-1];
+    //     //          dist       = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
+    //     //   }
+    //     //   // 0.00001 approx to 1 metre
+    //     //   if (dist > 0.00001 || dist == -1) {
+    //     //     // Log
+    //     //     console.log("Inst "+inst+": "+lat+","+lng);
+    //     //     track.push([lat,lng]);
+    //     //   }
+    //     // }
+    //     debug.innerHTML = debug.innerHTML + "sampler: "+inst+": "+position.coords.latitude+","+position.coords.longitude+"</br>";
+    //     track[inst].push([position.coords.latitude,position.coords.longitude]);
+    //   },
+    //   function(error) {
+    //     alert(error.code+": "+error.message);
+    //   },
+    //   options);
+    // }; // end sample_location
+
+    function draw_track() {
+
+      let samp_hist = [];
+      let av_track  = [];
+
+      track_draw.imageSmoothingEnabled = false;
+      track_draw.clearRect(0,0,track_container.width,track_container.height);
+
+      av_track.push(track[0])
+      for (var i = 1; i < track.length; i++) {
+        let prev_latlng = av_track[av_track.length-1];
+        let latlng      = track[i];
+
+        dist = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+        if (dist >= distance.value*1e-5) {
+          samp_hist.push(track[i]);
+        }
+
+        if (samp_hist.length >= average.value) {
+          let lat = 0;
+          let lng = 0;
+          for (var i = 0; i < samp_hist.length; i++) {
+            lat += samp_hist[i][0];
+            lng += samp_hist[i][1];
+          }
+          lat = lat / average.value;
+          lng = lng / average.value;
+          av_track.push([lat,lng]);
+          samp_hist.shift();
+        }
+      }
+
+      let str = "";
+      str = str + "Samples: "+av_track.length+"</br>";
+      for (var i = 0; i < av_track.length; i++) {
+        let latlng = av_track[i];
+        str = str+ latlng[0]+", "+latlng[1]+"</br>";
+      }
+      debug.innerHTML = str;
+
+      // Draw track
+      let maxLat  = av_track[0][0];
+      let minLat  = av_track[0][0];
+      let maxLng  = av_track[0][1];
+      let minLng  = av_track[0][1];
+      for (var i = 1; i < av_track.length; i++) {
+        let latlng = av_track[i];
+        if (latlng[0] > maxLat) {
+          maxLat = latlng[0];
+        }
+        if (latlng[0] < minLat) {
+          minLat = latlng[0];
+        }
+        if (latlng[1] > maxLng ) {
+          maxLng  = latlng[1];
+        }
+        if (latlng[1] < minLng ) {
+          minLng  = latlng[1];
+        }
+      }
+      let latRange  = maxLat  - minLat;
+      let lngRange  = maxLng  - minLng;
+      let scaleLat  = track_canvas.height / latRange;
+      let scaleLng  = track_canvas.width / lngRange;
+      let scale = scaleLng;
+      if (scaleLat < scaleLng) {
+        scale = scaleLat;
+      }
+      str = str+latRange + ", " + lngRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale+"</br>";
+      for (var i = 0; i < av_track.length; i++) {
+        let latlng = av_track[i];
+        let x = (latlng[1]-minLng)*scale;
+        let y = track_canvas.height - (latlng[0]-minLat)*scale;
+        str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
+        // alert(str);
+        if (i==0) {
+          track_draw.moveTo(x,y);
+        } else {
+          track_draw.lineTo(x,y);
+          track_draw.stroke();
+        }
+      }
+      debug.innerHTML = str;
+    }
 
     if (window.DeviceMotionEvent) {
       window.addEventListener('deviceorientation', function(event) {
@@ -396,6 +499,18 @@
       rose.style.transform = "rotate(-"+heading.value+"deg)";
       slider.value = heading.value;
     })
+    
+    average.addEventListener('input', function() {
+      if (startstop.innerHTML == "Done") {
+        draw_track();
+      }
+    })
+
+    distance.addEventListener('input', function() {
+      if (startstop.innerHTML == "Done") {
+        draw_track();
+      }
+    })
 
     startstop.addEventListener('click', function() {
       if (startstop.innerHTML == "Start Track") {
@@ -427,20 +542,21 @@
               // }
               
               debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
+              track.push([position.coords.latitude,position.coords.longitude]);
 
-              samp_hist.push(position.coords);
-              if (samp_hist.length >= samplers.value) {
-                let lat = 0;
-                let lng = 0;
-                for (var i = 0; i < samp_hist.length; i++) {
-                  lat += samp_hist[i].latitude;
-                  lng += samp_hist[i].longitude;
-                }
-                lat = lat / samplers.value;
-                lng = lng / samplers.value;
-                track.push([lat,lng]);
-                samp_hist.shift();
-              }
+              // samp_hist.push(position.coords);
+              // if (samp_hist.length >= samplers.value) {
+              //   let lat = 0;
+              //   let lng = 0;
+              //   for (var i = 0; i < samp_hist.length; i++) {
+              //     lat += samp_hist[i].latitude;
+              //     lng += samp_hist[i].longitude;
+              //   }
+              //   lat = lat / samplers.value;
+              //   lng = lng / samplers.value;
+              //   track.push([lat,lng]);
+              //   samp_hist.shift();
+              // }
             },
             function(error) {
               alert(error.code+": "+error.message);
@@ -479,95 +595,97 @@
         //     min_track = track[i].length;
         //   }
         // }
-        var str = "";
-        // let av_track = [];
-        // // Calculate "average" track
-        // for (var i = 0; i < min_track; i++) {
-        //   let lat = 0;
-        //   let lng = 0;
-        //   for (var j = 0; j < samplers.value; j++) {
-        //     let latlng = track[j][i];
-        //     lat += latlng[0];
-        //     lng += latlng[1];
-        //     str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
-        //   }
-        //   lat = lat / samplers.value;
-        //   lng = lng / samplers.value;
-        //   av_track.push([lat,lng]);
+        // var str = "";
+        // // let av_track = [];
+        // // // Calculate "average" track
+        // // for (var i = 0; i < min_track; i++) {
+        // //   let lat = 0;
+        // //   let lng = 0;
+        // //   for (var j = 0; j < samplers.value; j++) {
+        // //     let latlng = track[j][i];
+        // //     lat += latlng[0];
+        // //     lng += latlng[1];
+        // //     str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
+        // //   }
+        // //   lat = lat / samplers.value;
+        // //   lng = lng / samplers.value;
+        // //   av_track.push([lat,lng]);
+        // // }
+        // let av_track = track;
+        // str = str + "Samples: "+av_track.length+"</br>";
+        // for (var i = 0; i < av_track.length; i++) {
+        //   let latlng = av_track[i];
+        //   str = str+ latlng[0]+", "+latlng[1]+"</br>";
         // }
-        let av_track = track;
-        str = str + "Samples: "+av_track.length+"</br>";
-        for (var i = 0; i < av_track.length; i++) {
-          let latlng = av_track[i];
-          str = str+ latlng[0]+", "+latlng[1]+"</br>";
-        }
-        // alert(str);
-        debug.innerHTML = str;
-        if (av_track.length > 0) {
+        // // alert(str);
+        // debug.innerHTML = str;
+        // if (av_track.length > 0) {
           if (confirm("View track?")) {
             // Using display to hide but apparently it means we can't use transitions, may want to revisit
             compass.style.display = "none";
             heading_container.style.display = "none";
             track_container.style.display= "block";
             startstop.innerHTML = "Done";
-            // Clear any existing track
-            if (confirm("Clear?")) {
-              // track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
-              track_draw.clearRect(0,0,track_container.width,track_container.height);
-            }
-            //
-            track_draw.imageSmoothingEnabled = false;
-            // Draw track
-            let maxLat  = av_track[0][0];
-            let minLat  = av_track[0][0];
-            let maxLng  = av_track[0][1];
-            let minLng  = av_track[0][1];
-            for (var i = 1; i < av_track.length; i++) {
-              let latlng = av_track[i];
-              if (latlng[0] > maxLat) {
-                maxLat = latlng[0];
-              }
-              if (latlng[0] < minLat) {
-                minLat = latlng[0];
-              }
-              if (latlng[1] > maxLng ) {
-                maxLng  = latlng[1];
-              }
-              if (latlng[1] < minLng ) {
-                minLng  = latlng[1];
-              }
-            }
-            let latRange  = maxLat  - minLat;
-            let lngRange  = maxLng  - minLng;
-            let scaleLat  = track_canvas.height / latRange;
-            let scaleLng  = track_canvas.width / lngRange;
-            let scale = scaleLng;
-            if (scaleLat < scaleLng) {
-              scale = scaleLat;
-            }
-            // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
-            // alert(str);
-            for (var i = 0; i < av_track.length; i++) {
-              let latlng = av_track[i];
-              let x = (latlng[1]-minLng)*scale;
-              let y = track_canvas.height - (latlng[0]-minLat)*scale;
-              str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
-              // alert(str);
-              if (i==0) {
-                track_draw.moveTo(x,y);
-                // track_draw.fillText(""+i,x,y);
-              } else {
-                track_draw.lineTo(x,y);
-                track_draw.stroke();
-              }
-              // if (i == av_track.length-1) {
-              //   track_draw.fillText(""+i,x,y);
-              // }
-            }
-            // alert(str);
-            debug.innerHTML = str;
+
+            draw_track();
+
+            // // Clear any existing track
+            // if (confirm("Clear?")) {
+            //   track_draw.clearRect(0,0,track_container.width,track_container.height);
+            // }
+            // //
+            // track_draw.imageSmoothingEnabled = false;
+            // // Draw track
+            // let maxLat  = av_track[0][0];
+            // let minLat  = av_track[0][0];
+            // let maxLng  = av_track[0][1];
+            // let minLng  = av_track[0][1];
+            // for (var i = 1; i < av_track.length; i++) {
+            //   let latlng = av_track[i];
+            //   if (latlng[0] > maxLat) {
+            //     maxLat = latlng[0];
+            //   }
+            //   if (latlng[0] < minLat) {
+            //     minLat = latlng[0];
+            //   }
+            //   if (latlng[1] > maxLng ) {
+            //     maxLng  = latlng[1];
+            //   }
+            //   if (latlng[1] < minLng ) {
+            //     minLng  = latlng[1];
+            //   }
+            // }
+            // let latRange  = maxLat  - minLat;
+            // let lngRange  = maxLng  - minLng;
+            // let scaleLat  = track_canvas.height / latRange;
+            // let scaleLng  = track_canvas.width / lngRange;
+            // let scale = scaleLng;
+            // if (scaleLat < scaleLng) {
+            //   scale = scaleLat;
+            // }
+            // // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
+            // // alert(str);
+            // for (var i = 0; i < av_track.length; i++) {
+            //   let latlng = av_track[i];
+            //   let x = (latlng[1]-minLng)*scale;
+            //   let y = track_canvas.height - (latlng[0]-minLat)*scale;
+            //   str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
+            //   // alert(str);
+            //   if (i==0) {
+            //     track_draw.moveTo(x,y);
+            //     // track_draw.fillText(""+i,x,y);
+            //   } else {
+            //     track_draw.lineTo(x,y);
+            //     track_draw.stroke();
+            //   }
+            //   // if (i == av_track.length-1) {
+            //   //   track_draw.fillText(""+i,x,y);
+            //   // }
+            // }
+            // // alert(str);
+            // debug.innerHTML = str;
           }
-        }
+        // }
       }
     })
 
