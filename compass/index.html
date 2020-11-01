@@ -616,6 +616,7 @@
         DeviceOrientationEvent.requestPermission().then(permissionState => {
           if (permissionState === 'granted') {
             window.addEventListener('deviceorientation', heading_change);
+            startstop.innerHTML = "Start Track"
           }
         }).catch(console.error);
       } else if (startstop.innerHTML == "Start Track") {
