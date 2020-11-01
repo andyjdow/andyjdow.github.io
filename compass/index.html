@@ -469,6 +469,21 @@
 
     var sampler = [];
 
+    function heading_change(event) {
+      var rotation = 0;
+      if (event.webkitCompassHeading) {
+        message.innerHTML = "Heading: " + event.webkitCompassHeading.toFixed(0);
+        rotation = event.webkitCompassHeading;
+      } else if (event.alpha) {
+        message.innerHTML = "Heading: " + event.alpha.toFixed(0);
+        rotation = event.alpha;
+      } else {
+        message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
+      }
+      // Rotate needle
+      needle.style.transform = "rotate("+rotation+"deg)";
+    }
+
     function draw_track() {
       if (confirm("Use test track?")) {
         track = test_track;
@@ -550,6 +565,7 @@
         let x = (latlng[1]-minLng)*scale;
         let y = track_canvas.height - (latlng[0]-minLat)*scale;
         str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
+        track_draw.strokeStyle = "#AD0AD8"; // Purple-ish
         if (i==0) {
           track_draw.moveTo(x,y);
         } else {
@@ -560,21 +576,15 @@
       debug.innerHTML = str;
     }
 
+    // On iOS we need to ask permission to use the compass
+    // o https://developer.apple.com/forums/thread/128376 
+    //   & https://stackoverflow.com/questions/56514116/how-do-i-get-deviceorientationevent-and-devicemotionevent-to-work-on-safari
     if (window.DeviceOrientationEvent) {
-      window.addEventListener('deviceorientation', function(event) {
-        var rotation = 0;
-        if (event.webkitCompassHeading) {
-          message.innerHTML = "Heading: " + event.webkitCompassHeading.toFixed(0);
-          rotation = event.webkitCompassHeading;
-        } else if (event.alpha) {
-          message.innerHTML = "Heading: " + event.alpha.toFixed(0);
-          rotation = event.alpha;
-        } else {
-          message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
-        }
-        // Rotate needle
-        needle.style.transform = "rotate("+rotation+"deg)";
-      });
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        startstop.innerHTML = "Permission"
+      } else {
+        window.addEventListener('deviceorientation', heading_change);
+      }
     } else {
       window.alert("Device orientation not supported. :-(");
     }
@@ -602,7 +612,13 @@
     })
 
     startstop.addEventListener('click', function() {
-      if (startstop.innerHTML == "Start Track") {
+      if (startstop.innerHTML == "Permission") {
+        DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', heading_change);
+          }
+        }).catch(console.error);
+      } else if (startstop.innerHTML == "Start Track") {
         startstop.innerHTML = "Stop Track"
         debug.innerHTML = "";
         let options = {
