@@ -385,13 +385,16 @@
 
       track_draw.imageSmoothingEnabled = false;
       track_draw.clearRect(0,0,track_container.width,track_container.height);
+      // track_draw.clearRect(0,0,track_container.width,track_container.height);
 
+      debug.innerHTML = "Processing track. Average: "+average.value+" Distance: "+distance.value*1e-5+"</br>"
       av_track.push(track[0])
       for (var i = 1; i < track.length; i++) {
         let prev_latlng = av_track[av_track.length-1];
         let latlng      = track[i];
 
         dist = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+        debug.innerHTML = debug.innerHTML + dist + "</br>"
         if (dist >= distance.value*1e-5) {
           samp_hist.push(track[i]);
         }
