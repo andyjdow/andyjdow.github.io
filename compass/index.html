@@ -294,7 +294,6 @@
   </dir>
   <div id="startstop_container">
     <button id="startstop" type="button">Start Track</button>
-    <!-- <input id="samplers" type="number" value="3"> -->
     <div id="message">Heading will display here</div>
   </div>
   <div id="debug">
@@ -462,71 +461,16 @@
     var track_draw        = track_canvas.getContext("2d");
     var average           = document.getElementById('average');
     var distance          = document.getElementById('distance');
-    // var samplers          = document.getElementById('samplers');
     var debug             = document.getElementById('debug');
     
-    var track     = [];
-    // var samp_hist = [];
+    // debug.style.display = "none";
+
+    var track   = [];
 
     var sampler = [];
-    // var sampler1          = -1;
-    // var sampler2          = -1;
-    // var sampler3          = -1;
-
-    // var sample_cnt        = [-1, -1, -1];
-    // var sample            = [0 , 0 ,  0];
-    // function sample_location(inst) {
-    //   // console.log("Sampler "+inst);
-    //   let options = {
-    //     enableHighAccuracy: true,
-    //     timeout: Infinity,
-    //     maximumAge: 0
-    //   };
-    //   navigator.geolocation.getCurrentPosition(function(position) {
-    //     // sample_cnt[inst]++;
-    //     // sample[inst] = position.coords; 
-    //     // let log_sample = true;
-    //     // let cnt_test   = sample_cnt[inst]; 
-    //     // for (var i = 0; i < sample_cnt.length; i++) {
-    //     //   if (sample_cnt[i] != cnt_test) {
-    //     //     log_sample = false;
-    //     //   }
-    //     // }
-    //     // if (log_sample) {
-    //     //   // Average samples then log
-    //     //   let lat = 0;
-    //     //   let lng = 0;
-    //     //   for (var i = 0; i < sample_cnt.length; i++) {
-    //     //     lat += sample[inst].latitude;
-    //     //     lng += sample[inst].longitude;
-    //     //   }
-    //     //   lat = lat / sample_cnt.length;
-    //     //   lng = lng / sample_cnt.length;
-    //     //   // Have we moved enough?
-    //     //   let dist = -1;
-    //     //   if (track.length > 0) {
-    //     //     let prev_latlng = track[track.length-1];
-    //     //          dist       = Math.sqrt(Math.pow(lat-prev_latlng[0],2)+Math.pow(lng-prev_latlng[1],2));
-    //     //   }
-    //     //   // 0.00001 approx to 1 metre
-    //     //   if (dist > 0.00001 || dist == -1) {
-    //     //     // Log
-    //     //     console.log("Inst "+inst+": "+lat+","+lng);
-    //     //     track.push([lat,lng]);
-    //     //   }
-    //     // }
-    //     debug.innerHTML = debug.innerHTML + "sampler: "+inst+": "+position.coords.latitude+","+position.coords.longitude+"</br>";
-    //     track[inst].push([position.coords.latitude,position.coords.longitude]);
-    //   },
-    //   function(error) {
-    //     alert(error.code+": "+error.message);
-    //   },
-    //   options);
-    // }; // end sample_location
 
     function draw_track() {
-
-      if (confirm("Use test?")) {
+      if (confirm("Use test track?")) {
         track = test_track;
       }
 
@@ -534,21 +478,18 @@
       let av_track  = [];
 
       track_draw.imageSmoothingEnabled = false;
-      // alert("canvas: "+track_canvas.width+","+track_canvas.height)
-      // track_draw.clearRect(0,0,track_container.width,track_container.height);
       track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
       track_draw.beginPath(); // Required to get the clear to work!!!
-      // alert("num samples: "+track.length);
 
-      debug.innerHTML = "Processing track. Average: "+average.value+" Distance: "+distance.value*1e-5+"</br>"
-      // av_track = track;
+      let str = "";
+      str = "Processing track. Average: "+average.value+" Distance: "+distance.value*1e-5+"</br>"
       av_track.push(track[0])
       for (var i = 1; i < track.length; i++) {
         let prev_latlng = av_track[av_track.length-1];
         let latlng      = track[i];
-        // alert("prev: "+prev_latlng[0]+","+prev_latlng[1]+" next: "+latlng[0]+","+latlng[1])
         dist = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
-        debug.innerHTML = debug.innerHTML + dist + "</br>"
+        str = str + dist + "</br>"
+        debug.innerHTML = str
         if (dist >= distance.value*1e-5) {
           samp_hist.push(track[i]);
         }
@@ -567,7 +508,6 @@
         }
       }
 
-      let str = "";
       str = str + "Samples: "+av_track.length+"</br>";
       for (var i = 0; i < av_track.length; i++) {
         let latlng = av_track[i];
@@ -595,6 +535,7 @@
           minLng  = latlng[1];
         }
       }
+      // Trying to add a border by increasing range but it doesn't seem to work
       let latRange  = (maxLat  - minLat)*1.05;
       let lngRange  = (maxLng  - minLng)*1.05;
       let scaleLat  = track_canvas.height / latRange;
@@ -603,14 +544,12 @@
       if (scaleLat < scaleLng) {
         scale = scaleLat;
       }
-      // scale = scale *0.95; // Leave a small border
       str = str+latRange + ", " + lngRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale+"</br>";
       for (var i = 0; i < av_track.length; i++) {
         let latlng = av_track[i];
         let x = (latlng[1]-minLng)*scale;
         let y = track_canvas.height - (latlng[0]-minLat)*scale;
         str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
-        // alert(str);
         if (i==0) {
           track_draw.moveTo(x,y);
         } else {
@@ -621,26 +560,18 @@
       debug.innerHTML = str;
     }
 
-    if (window.DeviceMotionEvent) {
+    if (window.DeviceOrientationEvent) {
       window.addEventListener('deviceorientation', function(event) {
         var rotation = 0;
         if (event.webkitCompassHeading) {
-          // message.innerHTML = "CompassHeading("+ver+"): " + event.webkitCompassHeading;
           message.innerHTML = "Heading: " + event.webkitCompassHeading.toFixed(0);
           rotation = event.webkitCompassHeading;
         } else if (event.alpha) {
-          // message.innerHTML = "Alpha("+ver+"): " + event.alpha;
           message.innerHTML = "Heading: " + event.alpha.toFixed(0);
           rotation = event.alpha;
         } else {
-          // message.innerHTML = "Alpha("+ver+") is undefined ";
           message.innerHTML = "Alpha or webkitCompassHeading is undefined. ";
         }
-        // Requires too high a precision to see motion and display well
-        // if (track.length > 0) {
-        //   let latlng = track[track.length-1];
-        //   message.innerHTML = message.innerHTML + " latlng: "+latlng[0].toFixed(4)+", "+latlng[1].toFixed(4);
-        // }
         // Rotate needle
         needle.style.transform = "rotate("+rotation+"deg)";
       });
@@ -693,44 +624,13 @@
           //   options);
           // // Now enable tracking as we move 
           sampler = navigator.geolocation.watchPosition(function(position) {
-              // console.log(position.coords.latitude+","+position.coords.longitude)
-              // let lastlatlng = track[track.length-1];
-              // if (lastlatlng[0] != position.coords.latitude && lastlatlng[1] != position.coords.longitude && track.length > 0) {
-              //   track.push([position.coords.latitude,position.coords.longitude]);
-              // }
-              
               debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
               track.push([position.coords.latitude,position.coords.longitude]);
-
-              // samp_hist.push(position.coords);
-              // if (samp_hist.length >= samplers.value) {
-              //   let lat = 0;
-              //   let lng = 0;
-              //   for (var i = 0; i < samp_hist.length; i++) {
-              //     lat += samp_hist[i].latitude;
-              //     lng += samp_hist[i].longitude;
-              //   }
-              //   lat = lat / samplers.value;
-              //   lng = lng / samplers.value;
-              //   track.push([lat,lng]);
-              //   samp_hist.shift();
-              // }
             },
             function(error) {
               alert(error.code+": "+error.message);
             },
             options);
-          // Used time based sampling
-          // o Using 3 "samplers" to try to generate a more accurate location
-          // sampler1 = setInterval(sample_location,500,0);
-          // sampler2 = setInterval(sample_location,500,1);
-          // sampler3 = setInterval(sample_location,500,2);
-          // sampler = [];
-          // for (var i = 0; i < samplers.value; i++) {
-          //   track.push([]);
-          //   let s = setInterval(sample_location,500,i);
-          //   sampler.push(s);
-          // }
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
@@ -741,109 +641,15 @@
         track_container.style.display= "none";
       } else {
         startstop.innerHTML = "Start Track"
-        // navigator.geolocation.clearWatch(sample_location);
         navigator.geolocation.clearWatch(sampler);
-        // clearInterval(sampler1);
-        // clearInterval(sampler2);
-        // clearInterval(sampler3);
-        // let min_track = track[0].length;
-        // for (var i = 0; i < samplers.value; i++) {
-        //   clearInterval(sampler[i]);
-        //   if (track[i].length < min_track) {
-        //     min_track = track[i].length;
-        //   }
-        // }
-        // var str = "";
-        // // let av_track = [];
-        // // // Calculate "average" track
-        // // for (var i = 0; i < min_track; i++) {
-        // //   let lat = 0;
-        // //   let lng = 0;
-        // //   for (var j = 0; j < samplers.value; j++) {
-        // //     let latlng = track[j][i];
-        // //     lat += latlng[0];
-        // //     lng += latlng[1];
-        // //     str = str + i + ": " + j + ": " + latlng[0]+", "+latlng[1]+", "+lat + ", "+lng+"</br>";
-        // //   }
-        // //   lat = lat / samplers.value;
-        // //   lng = lng / samplers.value;
-        // //   av_track.push([lat,lng]);
-        // // }
-        // let av_track = track;
-        // str = str + "Samples: "+av_track.length+"</br>";
-        // for (var i = 0; i < av_track.length; i++) {
-        //   let latlng = av_track[i];
-        //   str = str+ latlng[0]+", "+latlng[1]+"</br>";
-        // }
-        // // alert(str);
-        // debug.innerHTML = str;
-        // if (av_track.length > 0) {
-          if (confirm("View track?")) {
-            // Using display to hide but apparently it means we can't use transitions, may want to revisit
-            compass.style.display = "none";
-            heading_container.style.display = "none";
-            track_container.style.display= "block";
-            startstop.innerHTML = "Done";
-
-            draw_track();
-
-            // // Clear any existing track
-            // if (confirm("Clear?")) {
-            //   track_draw.clearRect(0,0,track_container.width,track_container.height);
-            // }
-            // //
-            // track_draw.imageSmoothingEnabled = false;
-            // // Draw track
-            // let maxLat  = av_track[0][0];
-            // let minLat  = av_track[0][0];
-            // let maxLng  = av_track[0][1];
-            // let minLng  = av_track[0][1];
-            // for (var i = 1; i < av_track.length; i++) {
-            //   let latlng = av_track[i];
-            //   if (latlng[0] > maxLat) {
-            //     maxLat = latlng[0];
-            //   }
-            //   if (latlng[0] < minLat) {
-            //     minLat = latlng[0];
-            //   }
-            //   if (latlng[1] > maxLng ) {
-            //     maxLng  = latlng[1];
-            //   }
-            //   if (latlng[1] < minLng ) {
-            //     minLng  = latlng[1];
-            //   }
-            // }
-            // let latRange  = maxLat  - minLat;
-            // let lngRange  = maxLng  - minLng;
-            // let scaleLat  = track_canvas.height / latRange;
-            // let scaleLng  = track_canvas.width / lngRange;
-            // let scale = scaleLng;
-            // if (scaleLat < scaleLng) {
-            //   scale = scaleLat;
-            // }
-            // // str = latRange + ", " + longRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale;
-            // // alert(str);
-            // for (var i = 0; i < av_track.length; i++) {
-            //   let latlng = av_track[i];
-            //   let x = (latlng[1]-minLng)*scale;
-            //   let y = track_canvas.height - (latlng[0]-minLat)*scale;
-            //   str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
-            //   // alert(str);
-            //   if (i==0) {
-            //     track_draw.moveTo(x,y);
-            //     // track_draw.fillText(""+i,x,y);
-            //   } else {
-            //     track_draw.lineTo(x,y);
-            //     track_draw.stroke();
-            //   }
-            //   // if (i == av_track.length-1) {
-            //   //   track_draw.fillText(""+i,x,y);
-            //   // }
-            // }
-            // // alert(str);
-            // debug.innerHTML = str;
-          }
-        // }
+        if (confirm("View track?")) {
+          // Using display to hide but apparently it means we can't use transitions, may want to revisit
+          compass.style.display = "none";
+          heading_container.style.display = "none";
+          track_container.style.display= "block";
+          startstop.innerHTML = "Done";
+          draw_track();
+        }
       }
     })
 
