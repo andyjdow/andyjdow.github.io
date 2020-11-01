@@ -52,9 +52,8 @@
       height: 90%;
       width: 100%;
       /* Is below necessary ? */
-      overflow: hidden;
+      /*overflow: hidden;*/
       box-sizing: border-box;
-      /*visibility: hidden;*/
       display: none;
     }
     #track {
@@ -70,7 +69,7 @@
     }
     #average {
       position: absolute;
-      bottom: 0;
+      bottom: 1;
       left: 0;
       width: 100%;
     }
@@ -486,10 +485,7 @@
     }
 
     function draw_track() {
-      if (confirm("Use test track?")) {
-        track = test_track;
-      }
-
+      
       let samp_hist = [];
       let av_track  = [];
 
@@ -554,20 +550,20 @@
             minLng  = latlng[1];
           }
         }
-        // Trying to add a border by increasing range but it doesn't seem to work
-        let latRange  = (maxLat  - minLat)*1.05;
-        let lngRange  = (maxLng  - minLng)*1.05;
+        let latRange  = (maxLat  - minLat);
+        let lngRange  = (maxLng  - minLng);
         let scaleLat  = track_canvas.height / latRange;
         let scaleLng  = track_canvas.width / lngRange;
         let scale = scaleLng;
         if (scaleLat < scaleLng) {
           scale = scaleLat;
         }
+        scale = scale * 0.95
         str = str+latRange + ", " + lngRange + ", " + track_canvas.width + ", " + track_canvas.height + ", " + scale+"</br>";
         for (var i = 0; i < av_track.length; i++) {
           let latlng = av_track[i];
-          let x = (latlng[1]-minLng)*scale;
-          let y = track_canvas.height - (latlng[0]-minLat)*scale;
+          let x = track_canvas.width  *0.025 + (latlng[1]-minLng)*scale;
+          let y = track_canvas.height *0.975 - (latlng[0]-minLat)*scale;
           str = str+ latlng[1] + ", " + minLng  + ", " + latlng[0] + ", " + minLat + ", " + x + ", " + y + "</br>";
           track_draw.strokeStyle = "#AD0AD8"; // Purple-ish
           if (i==0) {
@@ -614,6 +610,12 @@
       if (startstop.innerHTML == "Done") {
         draw_track();
       }
+    })
+
+    // So we can save the tracks
+    track_canvas.addEventListener('click', function() {
+      let img_win = window.open();
+      img_win.document.write("<img src=\""+track_canvas.toDataURL("image/png")+"\">")
     })
 
     startstop.addEventListener('click', function() {
@@ -670,6 +672,10 @@
           heading_container.style.display = "none";
           track_container.style.display= "block";
           startstop.innerHTML = "Done";
+
+          if (confirm("Use test track?")) {
+            track = test_track;
+          }
           draw_track();
         }
       }
