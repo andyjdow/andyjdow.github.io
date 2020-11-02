@@ -57,6 +57,9 @@
       display: none;
     }
     #track {
+      position: absolute;
+      top: 0;
+      left: 0;
       /*height: 100%;*/
       height: 90%;
       width: 100%;
@@ -668,10 +671,15 @@
         navigator.geolocation.clearWatch(sampler);
         if (confirm("View track?")) {
           // Using display to hide but apparently it means we can't use transitions, may want to revisit
+          startstop.innerHTML = "Done";
           compass.style.display = "none";
           heading_container.style.display = "none";
           track_container.style.display= "block";
-          startstop.innerHTML = "Done";
+          // A canvas has 2 width/height values with the drawing area not being set by the CSS attributes!
+          // and it seems to need to be reset after setting display=none
+          track_canvas.width    = track_canvas.clientWidth; 
+          track_canvas.height   = track_canvas.clientHeight;
+          
 
           if (confirm("Use test track?")) {
             track = test_track;
