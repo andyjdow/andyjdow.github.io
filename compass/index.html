@@ -48,8 +48,8 @@
     }
     #track_container {
       position: relative;
-      /*height: 80%;*/
-      height: 90%;
+      height: 80%;
+      /*height: 90%;*/
       width: 100%;
       /* Is below necessary ? */
       /*overflow: hidden;*/
@@ -66,13 +66,13 @@
     }
     #distance {
       position: absolute;
-      bottom: 5%;
+      bottom: 7%;
       left: 0;
       width: 100%;
     }
     #average {
       position: absolute;
-      bottom: 1;
+      bottom: 2%;
       left: 0;
       width: 100%;
     }
@@ -466,7 +466,7 @@
     var debug             = document.getElementById('debug');
     
     // Hide debug
-    // debug.style.display = "none";
+    debug.style.display = "none";
 
     var track   = [];
 
@@ -680,10 +680,12 @@
           track_canvas.width    = track_canvas.clientWidth; 
           track_canvas.height   = track_canvas.clientHeight;
           
-
-          if (confirm("Use test track?")) {
-            track = test_track;
+          if (debug.style.display != "none") {
+            if (confirm("Use test track?")) {
+              track = test_track;
+            }
           }
+
           draw_track();
         }
       }
