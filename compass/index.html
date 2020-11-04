@@ -64,12 +64,12 @@
       height: 90%;
       width: 100%;
     }
-    #distance {
+    /*#distance {
       position: absolute;
       bottom: 7%;
       left: 0;
       width: 100%;
-    }
+    }*/
     #average {
       position: absolute;
       bottom: 2%;
@@ -287,7 +287,7 @@
   </div>
   <div id="track_container">
     <canvas id="track"></canvas>
-    <input id="distance"  type="range"  min="0" max="5"  value="0" step="0.1">
+    <!-- <input id="distance"  type="range"  min="0" max="5"  value="0" step="0.1"> -->
     <input id="average"   type="range"  min="1" max="10" value="1">
   </div>
   <dir id="heading_container">
@@ -462,15 +462,11 @@
     var track_canvas      = document.getElementById('track');
     var track_draw        = track_canvas.getContext("2d");
     var average           = document.getElementById('average');
-    var distance          = document.getElementById('distance');
+    // var distance          = document.getElementById('distance');
     var debug             = document.getElementById('debug');
     
     // Hide debug
     debug.style.display = "none";
-
-    var track   = [];
-
-    var sampler = [];
 
     function heading_change(event) {
       var rotation = 0;
@@ -487,6 +483,58 @@
       needle.style.transform = "rotate("+rotation+"deg)";
     }
 
+    var startup = [];
+    var track   = [];
+    var sampler = [];
+
+    function start_sampler() {
+      let options = {
+        enableHighAccuracy: true,
+        timeout: Infinity,
+        maximumAge: 0
+      };
+      sampler = navigator.geolocation.watchPosition(function(position) {
+        // debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
+        // track.push([position.coords.latitude,position.coords.longitude]);
+        let startup_cnt = 5; // 2 or greater
+        if (startup.length == 0) {
+          startup.push([position.coords.latitude,position.coords.longitude]);
+        } else if (startup.length < startup_cnt) {
+          let too_far = false
+          for (var i = 0; i < startup.length; i++) {
+            let prev_latlng = startup[startup.length-1];
+            let latlng      = [position.coords.latitude,position.coords.longitude];
+            let dist        = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+            if (dist > 2e-5) {
+              too_far = true
+            }
+          }
+          if (too_far) {
+            // remove the first element
+            startup.shift()
+          }
+          startup.push([position.coords.latitude,position.coords.longitude]);
+          if (startup.length==startup_cnt) {
+            track.push([position.coords.latitude,position.coords.longitude]);
+            startstop.innerHTML = "Stop Track"
+          }
+        } else if (startup.length >= startup_cnt) {
+          // Have we moved far enough?
+          let prev_latlng = track[track.length-1];
+          let latlng      = [position.coords.latitude,position.coords.longitude];
+          let dist        = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+          if (dist >= 2e-5) {
+            debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
+            track.push(latlng);
+          }
+        }
+      },
+      function(error) {
+        alert(error.code+": "+error.message);
+      },
+      options);
+    }
+
     function draw_track() {
       
       let samp_hist = [];
@@ -496,21 +544,22 @@
       track_draw.clearRect(0,0,track_canvas.width,track_canvas.height);
       track_draw.beginPath(); // Required to get the clear to work!!!
 
-      let skip_samples = 1;
+      let skip_samples = 0;
       // Going to skip initial sample as sometimes it can be erroneous
-      if (track.length > 1) {
+      if (track.length > skip_samples) {
         let str = "";
-        str = "Processing track. Average: "+average.value+" Distance: "+distance.value*1e-5+"</br>"
-        av_track.push(track[1])
+        // str = "Processing track. Average: "+average.value+" Distance: "+distance.value*1e-5+"</br>"
+        av_track.push(track[skip_samples])
         for (var i = 2; i < track.length; i++) {
-          let prev_latlng = av_track[av_track.length-1];
-          let latlng      = track[i];
-          dist = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
-          str = str + dist + "</br>"
-          debug.innerHTML = str
-          if (dist >= distance.value*1e-5) {
-            samp_hist.push(track[i]);
-          }
+          // let prev_latlng = av_track[av_track.length-1];
+          // let latlng      = track[i];
+          // dist = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+          // str = str + dist + "</br>"
+          // debug.innerHTML = str
+          // if (dist >= distance.value*1e-5) {
+          //   samp_hist.push(track[i]);
+          // }
+          samp_hist.push(track[i]);
 
           if (samp_hist.length >= average.value) {
             let lat = 0;
@@ -609,11 +658,11 @@
       }
     })
 
-    distance.addEventListener('input', function() {
-      if (startstop.innerHTML == "Done") {
-        draw_track();
-      }
-    })
+    // distance.addEventListener('input', function() {
+    //   if (startstop.innerHTML == "Done") {
+    //     draw_track();
+    //   }
+    // })
 
     // So we can save the tracks
     track_canvas.addEventListener('click', function() {
@@ -630,13 +679,14 @@
           }
         }).catch(console.error);
       } else if (startstop.innerHTML == "Start Track") {
-        startstop.innerHTML = "Stop Track"
+        // startstop.innerHTML = "Stop Track"
+        startstop.innerHTML = "Starting..."
         debug.innerHTML = "";
-        let options = {
-          enableHighAccuracy: true,
-          timeout: Infinity,
-          maximumAge: 0
-        };
+        // let options = {
+        //   enableHighAccuracy: true,
+        //   timeout: Infinity,
+        //   maximumAge: 0
+        // };
         if (navigator.geolocation) {
           track = [];
           console.log("Starting geolocation...")
@@ -650,14 +700,23 @@
           //   },
           //   options);
           // // Now enable tracking as we move 
-          sampler = navigator.geolocation.watchPosition(function(position) {
-              debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
-              track.push([position.coords.latitude,position.coords.longitude]);
-            },
-            function(error) {
-              alert(error.code+": "+error.message);
-            },
-            options);
+          // sampler = navigator.geolocation.watchPosition(function(position) {
+          //     debug.innerHTML = debug.innerHTML + "sampled: "+position.coords.latitude+","+position.coords.longitude+"</br>";
+          //     // track.push([position.coords.latitude,position.coords.longitude]);
+          //     // Have we moved far enough?
+          //     let prev_latlng = track[track.length-1];
+          //     let latlng      = [position.coords.latitude,position.coords.longitude];
+          //     let dist        = Math.sqrt(Math.pow(latlng[0]-prev_latlng[0],2)+Math.pow(latlng[1]-prev_latlng[1],2));
+          //     if (dist >= 2e-5) {
+          //       track.push(latlng);
+          //     }
+
+          //   },
+          //   function(error) {
+          //     alert(error.code+": "+error.message);
+          //   },
+          //   options);
+          start_sampler();
         } else {
           window.alert("Geolocation is not supported. :-(")
         }
