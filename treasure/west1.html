@@ -1,0 +1,35 @@
+<head>
+  <title>West Kip 1</title>
+  <style>
+  div {
+    padding: 5px;
+  }
+  </style>
+</head>
+<body onload="check()">
+  <script>
+    function check() {
+      document.getElementById("Go").disabled = true;
+      var a1 = document.getElementById("a1").value;
+      var a2 = document.getElementById("a2").value;
+      var a3 = document.getElementById("a3").value;
+      if (a1 == 1 && a2 == 2 && a3 == 3) {
+        document.getElementById("Go").disabled = false;
+      }
+    }
+  </script>
+  <h1>West Kip 1</h1>
+  <div>
+    Answer 1: <input id="a1" type="number" onchange="check()" value = "">
+  </div>
+  <div>
+    Answer 2: <input id="a2" type="number" onchange="check()" value = "">
+  </div>
+  <div>
+    Answer 3: <input id="a3" type="number" onchange="check()" value = "">
+  </div>
+  <div>
+    <button id="Go" type="button" onclick="document.location='https://w3w.co/when.juror.dustbin'">Goto treasure!</button>
+  </div>
+
+</body>
