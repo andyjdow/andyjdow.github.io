@@ -9,8 +9,8 @@
   }
   </style>
 </head>
-<body>
-  <div>
+<body onload="check()">
+  <!-- <div>
     <button id="EastKip1" type="button" onclick="document.location='east1.html'">East Kip 1</button>
   </div>
   <div>
@@ -21,5 +21,76 @@
   </div>
   <div>
     <button id="WestKip2" type="button" onclick="document.location='west2.html'">West Kip 2</button>
+  </div> -->
+  <script>
+    var treasure = "";
+    function check() {
+      document.getElementById("Go").disabled = false;
+      var team = String(document.getElementById("team").value).toLowerCase();
+      var a1 = String(document.getElementById("a1").value).toLowerCase();
+      var a2 = String(document.getElementById("a2").value).toLowerCase();
+      var a3 = String(document.getElementById("a3").value).toLowerCase();
+      var a4 = String(document.getElementById("a4").value).toLowerCase();
+      if (team == "otter") {
+        treasure = "https://w3w.co/excavate.arranger.untruth";
+        document.getElementById("teamtick").innerHTML = "&#9989";
+      } else if (team == "falcon") {
+        treasure = "https://w3w.co/bedspread.fuss.school";
+        document.getElementById("teamtick").innerHTML = "&#9989";
+      } else if (team == "buffalo") {
+        treasure = "https://w3w.co/graced.available.matter";
+        document.getElementById("teamtick").innerHTML = "&#9989";
+      } else if (team == "seagull") {
+        treasure = "  ";
+        document.getElementById("teamtick").innerHTML = "&#9989";
+      } else {
+        document.getElementById("Go").disabled = true;
+        document.getElementById("teamtick").innerHTML = "";
+      }
+      document.getElementById("a1tick").innerHTML   = "&#9989";
+      document.getElementById("a2tick").innerHTML   = "&#9989";
+      document.getElementById("a3tick").innerHTML   = "&#9989";
+      document.getElementById("a4tick").innerHTML   = "&#9989";
+      if (a1 != "dove" && a1 != "pigeon") {
+        document.getElementById("Go").disabled = true;
+        document.getElementById("a1tick").innerHTML   = "";
+      }
+      if (a2 != "42") {
+        document.getElementById("Go").disabled = true;
+        document.getElementById("a2tick").innerHTML   = "";
+      }
+      if (a3 != "4") {
+        document.getElementById("Go").disabled = true;
+        document.getElementById("a3tick").innerHTML   = "";
+      }
+      if (a4 != "eh14583d") {
+        document.getElementById("Go").disabled = true;
+        document.getElementById("a4tick").innerHTML   = "";
+      }
+    }
+    function go() {
+      document.location=treasure;
+    }
+  </script>
+  <h1>Friday Scouts Treasure Hunt </h1>
+  <div>
+    Team ID: <input id="team" onchange="check()" value = ""><span id="teamtick"></span>
   </div>
+  <div>
+    Answer 1: <input id="a1" onchange="check()" value = ""><span id="a1tick"></span>
+  </div>
+  <div>
+    Answer 2: <input id="a2" onchange="check()" value = ""><span id="a2tick"></span>
+  </div>
+  <div>
+    Answer 3: <input id="a3" onchange="check()" value = ""><span id="a3tick"></span>
+  </div>
+  <div>
+    Answer 4: <input id="a4" onchange="check()" value = ""><span id="a4tick"></span>
+  </div>
+  <div>
+    <!-- <button id="Go" type="button" onclick="document.location='https://w3w.co/excavate.arranger.untruth'">Goto treasure!</button> -->
+    <button id="Go" type="button" onclick="go()">Goto treasure!</button>
+  </div>
+
 </body>
