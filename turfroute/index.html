@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <title>TurfRoute</title>
 
+  <!-- Handle scaling on mobile devices -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <script async
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5WiXfruClsedcHn-0FZy4Hvm1cn650ZI&callback=initMap">
   </script>
@@ -38,6 +41,12 @@
 
   <script type="text/javascript">
     let map;
+    var turfZones = {};
+
+    function removeMarker(m) {
+      console.log(m+" clicked!")
+      turfZones[m].setMap(null)
+    }
 
     function initMap() {
       map = new google.maps.Map(document.getElementById("map"), {
@@ -45,7 +54,13 @@
         center: { lat: 55.87981, lng: -3.32902 },
         // zoom: 12,
         zoom: 15,
+        streetViewControl: false,
+        fullscreenControl: false
       });
+      const directionsService   = new google.maps.DirectionsService();
+      // const directionsRenderer  = new google.maps.DirectionsRenderer();
+      // directionsRenderer.setMap(map);
+      var directionsRenderer    = null;
 
       // Add "my location" button
       // o Taken (kind of) from: https://github.com/leejacobson/googlemaps-tsp-ga/blob/master/index.html
@@ -73,14 +88,23 @@
 
       map.controls[google.maps.ControlPosition.TOP_RIGHT].push(getTurfsBtn);
 
-      var turfZones = {};
-
-      function removeMarker(m) {
-        m.setMap(null);
-      }
-
       getTurfsBtn.addEventListener("click", function() {
-        const turfUrl    = "http://api.turfgame.com/v4/zones"
+        // Clear any existing markers
+        // o Kind-of foreach from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
+        for (const [name, marker] of Object.entries(turfZones)) {
+          marker.setMap(null)
+        }
+        // Clear any directions
+        if (directionsRenderer != null) {
+          directionsRenderer.setMap(null);
+          directionsRenderer = null;
+        }
+        directionsRenderer  = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+        // Get new Turf zones
+        turfZones = {};
+        // const turfUrl    = "http://api.turfgame.com/v4/zones"
+        const turfUrl    = "https://api.turfgame.com/v4/zones"
         var   bounds = map.getBounds();
         var   post_data = [{
           "northEast" : {"latitude":bounds.getNorthEast().lat(), "longitude":bounds.getNorthEast().lng()},
@@ -94,22 +118,24 @@
           data: JSON.stringify(post_data),
           dataType: "JSON",
           success: function (data) {
-            console.log(data);
+            // console.log(data);
             // Add markers
             for (var i = 0; i < data.length; i++) {
-              var name = data[i]["name"];
-              console.log(name);
-              // turfZones[name] = new google.maps.Marker({
-              var zoneMarker = new google.maps.Marker({
+              // Important to make constant so the click listener has a fixed snapshot (closure) of the marker name
+              const name = data[i]["name"]; 
+              // console.log(name);
+              turfZones[name] = new google.maps.Marker({
                 position: {lat: data[i]["latitude"], lng: data[i]["longitude"]},
                 map,
                 title: name,
+                icon: {
+                  // url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                  // From: http://kml4earth.appspot.com/icons.html
+                  url: "http://maps.google.com/mapfiles/kml/paddle/ylw-stars-lv.png"
+                }
               });
-              // turfZones[name].addListener("click", function() {
-              zoneMarker.addListener("click", function() {
-                // turfZones[name].setMap(null);
-                // turfZones[name] = null;
-                removeMarker(zoneMarker);
+              turfZones[name].addListener("click", function() {
+                removeMarker(name);
               });
             }
           },
@@ -117,23 +143,89 @@
             console.log('Error: ${error}');
           }
         });
-
       });
 
+      var startstop = "start";
+      var start     = null;
+      var stop      = null;
+      map.addListener("click", function(event) {
+        if (startstop == "start") {
+          // console.log("Map clicked - Start!")
+          if (start != null) {
+            start.setMap(null);
+            start = null;
+          }
+          start = new google.maps.Marker({
+            position: event.latLng,
+            map,
+            title: "Start",
+            icon: {
+              url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+            }
+          });
+          startstop = "stop"
+        } else { // stop
+          // console.log("Map clicked - Stop!")
+          if (stop != null) {
+            stop.setMap(null);
+            stop = null;
+          }
+          stop = new google.maps.Marker({
+            position: event.latLng,
+            map,
+            title: "Stop",
+            icon: {
+              url: "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+            }
+          });
+          startstop = "start"
+        }
+      });
+
+      // Directions!
+      var getDirectionsBtn = document.createElement('button');
+      getDirectionsBtn.textContent = 'Get Directions'; // rather than innerHTML
+      getDirectionsBtn.classList.add("custom-map-control-button"); // To set style above
+
+      map.controls[google.maps.ControlPosition.TOP_RIGHT].push(getDirectionsBtn);
+      
+      // Kind of from https://developers.google.com/maps/documentation/javascript/examples/directions-simple
+      getDirectionsBtn.addEventListener("click", function() {
+        if (start == null) {
+          window.alert("Start location not set");
+          return
+        }
+        if (stop == null) {
+          window.alert("Stop location not set");
+          return
+        }
+        if (Object.keys(turfZones).length > 25) {
+          window.alert("More than 25 Zones selected!");
+          return
+        }
+        var dirRequest = {};
+        dirRequest["travelMode"]  = "BICYCLING";
+        // dirRequest["travelMode"]  = "WALKING";
+        dirRequest["origin"]      = start.getPosition().lat()+","+start.getPosition().lng();
+        dirRequest["destination"] = stop.getPosition().lat()+","+stop.getPosition().lng();
+        dirRequest["optimizeWaypoints"] = true; // Reorder waypoints
+        dirRequest["waypoints"] = [];
+        for (const [name, marker] of Object.entries(turfZones)) {
+          dirRequest["waypoints"].push({
+            location: marker.getPosition().lat()+","+marker.getPosition().lng()
+          });
+        }
+        // 
+        directionsService.route(dirRequest).then((response) => {
+          directionsRenderer.setDirections(response);
+        }).catch((e) => window.alert("Directions request failed due to " + status));
+        //
+      });
+      
     }
     
-    function getTurfZones () {
-      const url    = "http://api.turfgame.com/v4/zones"
-      var   bounds = map.getBounds();
-      var   data   = [{
-        "northEast" : {"latitude":bounds.getNorthEast().lat(), "longitude":bounds.getNorthEast().lng()},
-        "southWest" : {"latitude":bounds.getSoutWest().lat() , "longitude":bounds.getSoutWest().lng()}
-      }];
-    }
-
   </script>
 </head>
-
 
 <body>
   <div id="map"></div>
