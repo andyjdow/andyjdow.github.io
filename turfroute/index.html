@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TurfRoute</title>
+
+  <script async
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5WiXfruClsedcHn-0FZy4Hvm1cn650ZI&callback=initMap">
+  </script>
+  <!-- For HTTP requests -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+  <style>
+    #map {
+      height: 100%;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .custom-map-control-button {
+      background-color: #fff;
+      border: 0;
+      border-radius: 2px;
+      box-shadow: 0 1px 4px -1px rgba(0, 0, 0, 0.3);
+      margin: 10px;
+      padding: 0 0.5em;
+      font: 400 18px Roboto, Arial, sans-serif;
+      overflow: hidden;
+      height: 40px;
+      cursor: pointer;
+    }
+    .custom-map-control-button:hover {
+      background: #ebebeb;
+    }
+  </style>
+
+  <script type="text/javascript">
+    let map;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        // center: { lat: -34.397, lng: 150.644 },
+        center: { lat: 55.87981, lng: -3.32902 },
+        // zoom: 12,
+        zoom: 15,
+      });
+
+      // Add "my location" button
+      // o Taken (kind of) from: https://github.com/leejacobson/googlemaps-tsp-ga/blob/master/index.html
+      // o And https://developers.google.com/maps/documentation/javascript/examples/map-geolocation
+      var myLocationBtn = document.createElement('button');
+      myLocationBtn.textContent = 'My Location'; // rather than innerHTML
+      myLocationBtn.classList.add("custom-map-control-button"); // To set style above
+
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(myLocationBtn);
+      
+      myLocationBtn.addEventListener("click", function() {
+        navigator.geolocation.getCurrentPosition(function(success) {
+          // console.log(success.coords);
+          map.setCenter(new google.maps.LatLng(success.coords.latitude, success.coords.longitude));
+          map.setZoom(12);
+          // var bounds = map.getBounds();
+          // console.log(bounds.getSouthWest().toJSON());
+        });
+      });
+
+      // Add "get Turfs" button
+      var getTurfsBtn = document.createElement('button');
+      getTurfsBtn.textContent = "Get Turfs!";
+      getTurfsBtn.classList.add("custom-map-control-button");
+
+      map.controls[google.maps.ControlPosition.TOP_RIGHT].push(getTurfsBtn);
+
+      var turfZones = {};
+
+      function removeMarker(m) {
+        m.setMap(null);
+      }
+
+      getTurfsBtn.addEventListener("click", function() {
+        const turfUrl    = "http://api.turfgame.com/v4/zones"
+        var   bounds = map.getBounds();
+        var   post_data = [{
+          "northEast" : {"latitude":bounds.getNorthEast().lat(), "longitude":bounds.getNorthEast().lng()},
+          "southWest" : {"latitude":bounds.getSouthWest().lat(), "longitude":bounds.getSouthWest().lng()}
+        }];
+        // console.log(JSON.stringify(post_data));
+        $.ajax({
+          type: "POST",
+          url: turfUrl,
+          contentType: "application/json",
+          data: JSON.stringify(post_data),
+          dataType: "JSON",
+          success: function (data) {
+            console.log(data);
+            // Add markers
+            for (var i = 0; i < data.length; i++) {
+              var name = data[i]["name"];
+              console.log(name);
+              // turfZones[name] = new google.maps.Marker({
+              var zoneMarker = new google.maps.Marker({
+                position: {lat: data[i]["latitude"], lng: data[i]["longitude"]},
+                map,
+                title: name,
+              });
+              // turfZones[name].addListener("click", function() {
+              zoneMarker.addListener("click", function() {
+                // turfZones[name].setMap(null);
+                // turfZones[name] = null;
+                removeMarker(zoneMarker);
+              });
+            }
+          },
+          error: function(error) {
+            console.log('Error: ${error}');
+          }
+        });
+
+      });
+
+    }
+    
+    function getTurfZones () {
+      const url    = "http://api.turfgame.com/v4/zones"
+      var   bounds = map.getBounds();
+      var   data   = [{
+        "northEast" : {"latitude":bounds.getNorthEast().lat(), "longitude":bounds.getNorthEast().lng()},
+        "southWest" : {"latitude":bounds.getSoutWest().lat() , "longitude":bounds.getSoutWest().lng()}
+      }];
+    }
+
+  </script>
+</head>
+
+
+<body>
+  <div id="map"></div>
+</body>
+</html>
+
