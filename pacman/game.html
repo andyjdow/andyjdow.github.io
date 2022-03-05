@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script async
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD5WiXfruClsedcHn-0FZy4Hvm1cn650ZI&callback=initMap">
+    </script>
+
+    <style>
+      #map {
+        // For some reason 100% wasn't working but found a webpage that introduced vh & vw, viewport hieght & width, which seemed to work!
+        // o % is meant to be percentage of parent
+        // o We've got the banner that gets added to Google Apps so we need to use less than 100
+        // o Absolute px values worked but obviously not practical 
+        height: 85vh;
+        width: 96vw;
+      }
+      /*#setup {
+        height: 20vh;
+        width: 96vw;
+      }*/
+    </style>
+
+    <script type="text/javascript">
+      let map;
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById("map"), {
+          // center: { lat: -34.397, lng: 150.644 },
+          // center: { lat: 55.87981, lng: -3.32902 },
+          center: { lat: 55.884774, lng: -3.340605 },
+          // zoom: 12,
+          // zoom: 15,
+          zoom: 17,
+          streetViewControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+
+          styles: [
+            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+            {
+              featureType: "administrative.locality",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }],
+            },
+            {
+              featureType: "poi", // Disable all POI, there are sub-catagories, e.g. .business
+              stylers: [{ visibility: "off" }],
+            },
+            {
+              featureType: "poi",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563", visibility: "off" }],
+            },
+            {
+              featureType: "poi.park",
+              elementType: "geometry",
+              stylers: [{ color: "#263c3f" }],
+            },
+            {
+              featureType: "poi.park",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#6b9a76" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry",
+              stylers: [{ color: "#38414e" }],
+            },
+            {
+              featureType: "road",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#212a37" }],
+            },
+            {
+              featureType: "road",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#9ca5b3" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "geometry",
+              stylers: [{ color: "#746855" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "geometry.stroke",
+              stylers: [{ color: "#1f2835" }],
+            },
+            {
+              featureType: "road.highway",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#f3d19c" }],
+            },
+            {
+              featureType: "transit",
+              elementType: "geometry",
+              stylers: [{ color: "#2f3948" }],
+            },
+            {
+              featureType: "transit.station",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#d59563" }],
+            },
+            {
+              featureType: "water",
+              elementType: "geometry",
+              stylers: [{ color: "#17263c" }],
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.fill",
+              stylers: [{ color: "#515c6d" }],
+            },
+            {
+              featureType: "water",
+              elementType: "labels.text.stroke",
+              stylers: [{ color: "#17263c" }],
+            },
+          ]
+          
+        });
+        console.log("Map initialised!");
+        // Now add marker
+      }
+
+      function getMarkerURL(key) {
+        switch (key) {
+        case "pacman":
+          return "https://andyjdow.github.io/pacman/assets/pacman_right.gif";
+          break;
+        case "pacman_dead":
+          return "https://andyjdow.github.io/pacman/assets/pacman_dead.gif";
+          break;
+        case "blinky":
+          return "https://andyjdow.github.io/pacman/assets/blinky_right.gif";
+          break;
+        case "pinky":
+          return "https://andyjdow.github.io/pacman/assets/pinky_right.gif";
+          break;
+        case "inky":
+          return "https://andyjdow.github.io/pacman/assets/inky_right.gif";
+          break;
+        case "clyde":
+          return "https://andyjdow.github.io/pacman/assets/clyde_right.gif";
+          break;
+        case "ghost_vulnerable":
+          return "https://andyjdow.github.io/pacman/assets/ghost_dead.gif";
+          break;
+        case "ghost_dead":
+          return "https://andyjdow.github.io/pacman/assets/ghost_eyes.gif";
+          break;
+        case "cherry":
+          return "https://andyjdow.github.io/pacman/assets/cherry.gif";
+          break;
+        case "apple":
+          return "https://andyjdow.github.io/pacman/assets/apple.gif";
+          break;
+        case "orange":
+          return "https://andyjdow.github.io/pacman/assets/orange.gif";
+          break;
+        case "strawberry":
+          return "https://andyjdow.github.io/pacman/assets/strawberry.gif";
+          break;
+        case "smalldot":
+          return "https://andyjdow.github.io/pacman/assets/smalldot.gif";
+          break;
+        case "bigdot":
+          return "https://andyjdow.github.io/pacman/assets/bigdot.gif";
+          break;
+        default:
+          return "https://andyjdow.github.io/pacman/assets/ghost_eyes.gif";
+        }
+      }
+
+      var game          = "";
+      var player        = "";
+      var playerIdx     = -1;
+      var allMarkers    = {};
+      var timer         = -1;
+      var watchOptions  = {
+        enableHighAccuracy: true,
+        timeout: Infinity, // maximum length of time (in milliseconds) the device is allowed to take in order to return a position
+        maximumAge: 0      // maximum age in milliseconds of a possible cached position that is acceptable to return
+      };
+      var watchPosition = -1;
+      var currPosition  = { lat: -1, lng: -1 };
+      var prevPosition  = { lat: -1, lng: -1 };
+
+      function updateGame(lat,lng) {
+        google.script.run.withSuccessHandler(function(retVal) {
+          var updatedMarkers = {};
+          retVal["players"].forEach(function(item) {
+            console.log(item);
+            if (item["state"] != "registered" && item["state"] != "") {
+              var markerURL = getMarkerURL(item["state"]);
+              // switch (item["state"]) {
+              // case "pacman":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/pacman_right.gif";
+              //   break;
+              // case "pacman_dead":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/pacman_dead.gif";
+              //   break;
+              // case "blinky":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/blinky_right.gif";
+              //   break;
+              // case "pinky":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/pinky_right.gif";
+              //   break;
+              // case "inky":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/inky_right.gif";
+              //   break;
+              // case "clyde":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/clyde_right.gif";
+              //   break;
+              // case "ghost_vulnerable":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/ghost_dead.gif";
+              //   break;
+              // case "ghost_dead":
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/ghost_eyes.gif";
+              //   break;
+              // default:
+              //   markerURL = "https://andyjdow.github.io/pacman/assets/ghost_eyes.gif";
+              // }
+              if (item["name"] in allMarkers) {
+                console.log("Updating marker: "+allMarkers[item["name"]].getPosition())
+                allMarkers[item["name"]].setPosition({lat: item["lat"], lng: item["lng"]});
+                console.log("Updated marker: "+allMarkers[item["name"]].getPosition())
+                if (allMarkers[item["name"]].getIcon().url != markerURL) {
+                  allMarkers[item["name"]].setIcon({url: markerURL, scaledSize: new google.maps.Size(20,20)})
+                }
+                updatedMarkers[item["name"]] = allMarkers[item["name"]];
+                delete allMarkers[item["name"]];
+              } else {
+                console.log("Creating marker")
+                updatedMarkers[item["name"]] = new google.maps.Marker({
+                  position: {lat: item["lat"], lng: item["lng"]},
+                  map,
+                  title: item["name"],
+                  icon: {
+                    // From: http://kml4earth.appspot.com/icons.html
+                    // url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                    // url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                    // url: "http://maps.google.com/mapfiles/kml/paddle/ylw-stars-lv.png"
+                    // url: "http://maps.google.com/mapfiles/kml/paddle/"+playerName[0]+".png"
+                    // url: "https://andyjdow.github.io/pacman/assets/pacman_right.gif"
+                    url: markerURL,
+                    scaledSize: new google.maps.Size(20,20)
+                  }
+                });
+              }
+              // Current player specific behaviour
+              if (item["name"] == player ) {
+                if (currPosition != { lat: -1, lng: -1 }) {
+                  map.setCenter({lat: item["lat"], lng: item["lng"]});
+                }
+              }
+            } // Not registered
+            //  else if (item["name"] in allMarkers) {
+            //   // Otherwise remove marker
+            //   allMarkers[item["name"]].setMap(null);
+            //   // allMarkers.splice(allMarkers.indexOf(item["name"]),1); // Remove array element
+            //   delete allMarkers[item["name"]];
+            // }
+          }); // foreach player
+          // Now the objects
+          retVal["objects"].forEach(function(item) {
+            console.log(item);
+            var markerURL = getMarkerURL(item["name"]); // Different key to the players
+            if (item["name"] in allMarkers) {
+              // Just retain current marker
+              updatedMarkers[item["name"]] = allMarkers[item["name"]];
+              delete allMarkers[item["name"]];
+            } else {
+              console.log("Creating marker")
+              updatedMarkers[item["name"]] = new google.maps.Marker({
+                position: {lat: item["lat"], lng: item["lng"]},
+                map,
+                title: item["name"],
+                icon: {
+                  url: markerURL,
+                  scaledSize: new google.maps.Size(20,20)
+                }
+              });
+            }
+          }); // foreach object
+          // Clear any left over markers
+          for (let key of Object.keys(allMarkers)) {
+            allMarkers[key].setMap(null);
+          }
+          // Update markers
+          allMarkers = updatedMarkers;
+        }).updatePlayer(game,playerIdx,lat,lng); 
+      }
+
+      function start() {
+        game       = String(document.getElementById("game").value).toLowerCase();
+        player     = String(document.getElementById("player").value).toLowerCase();
+        // Hide inputs
+        var setup  = document.getElementById("setup");
+        setup.style.display = "none";
+        // Register player on server
+        google.script.run.withSuccessHandler(function(retVal) {
+          playerIdx = retVal;
+          console.log("register: "+playerIdx);
+        }).registerPlayer(game,player);
+        // Start game update timer
+        timer = setInterval(function() {
+          if (currPosition == prevPosition) {
+            updateGame(-1,-1); // Just get player updates
+          } else {
+            prevPosition = currPosition;
+            updateGame(currPosition["lat"],currPosition["lng"]);
+          }
+          // navigator.geolocation.getCurrentPosition(function(position) {
+          //   updateGame(position.coords.latitude,position.coords.longitude);
+
+          // });
+        },
+        5000); // every 5 secs
+        // Start position monitor
+        watchPosition = navigator.geolocation.watchPosition(function(position) {
+          // updateGame(position.coords.latitude,position.coords.longitude);
+          currPosition = { lat: position.coords.latitude, lng: position.coords.longitude };
+        },
+        function(error) {
+          alert(error.code+": "+error.message);
+        },
+        watchOptions);
+      }
+
+    </script>
+  </head>
+  <body>
+    <div id="setup">
+      Game: <input id="game" value = ""><br>
+      Team: <input id="player" value = ""><br> 
+      <button id="start" type="button" onclick="start()">Start!</button>
+    </div>
+    <div id="map">No map loaded.....</div>
+  </body>
+</html>
