@@ -1,28 +1,18 @@
 function doGet(e) {
-  /* let htmlOutput;
-  Logger.log("doGet<"+e.queryString+">");
-  if (e.queryString == "") {
-    //htmlOutput = HtmlService.createHtmlOutputFromFile('setup');
-    // Embedding the redirect 
-    htmlOutput = HtmlService.createTemplateFromFile('setup').evaluate();
-  } else {
-    urlParams = e.parameter;
-    if ("state" in urlParams) {
-      if (urlParams["state"] == "game") {
-        htmlOutput = HtmlService.createHtmlOutputFromFile('game');
-      } else {
-        htmlOutput = HtmlService.createHtmlOutput("Incorrect state!");  
+  // Default
+  var htmlOutput = HtmlService.createHtmlOutputFromFile('game');
+  if (e) {
+    if (e.parameter) {
+      if (e.parameter["state"]) {
+        if (e.parameter["state"] == "setup") {
+          htmlOutput = HtmlService.createHtmlOutputFromFile('setup');
+        }
       }
-    } else {
-      htmlOutput = HtmlService.createHtmlOutput("Incorrect URL query!");
     }
   }
-  htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1');
-  return htmlOutput;*/
-  //return ContentService.createTextOutput("Just some text!");
-  var htmlOutput = HtmlService.createHtmlOutputFromFile('game');
   // user-scalable require to stop auto-zooming when using an input box on a mobile device
   htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1, user-scalable=no');
+  // htmlOutput.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // So we can embedded the web app in our own page (in an iframe)
   return htmlOutput;
 }
 
@@ -235,4 +225,29 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     }
   }
   return gameStatus;
+ }
+
+ function getPlayers(game="test") {
+   Logger.log("getPlayers...");
+   // 
+   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
+   var playerSheet = SpreadsheetApp.getActiveSheet();
+   var playerData  = playerSheet.getDataRange().getValues();
+   var players = [];
+   for (var i = 0; i < playerData.length; i++) {
+    if (playerData[i][pGame] == game) {
+      var playerStatus = {
+        "name"     : playerData[i][pName],
+        "state"    : playerData[i][pState],
+        "substate" : playerData[i][pSubState],
+        "score"    : playerData[i][pScore],
+        "lat"      : playerData[i][pLat],
+        "lng"      : playerData[i][pLng],
+        "idx"      : i
+      }
+      players.push(playerStatus);
+    }
+  }
+  return players;
  }

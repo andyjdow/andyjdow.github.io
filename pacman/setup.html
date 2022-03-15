@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+
+    <script type="text/javascript">
+      var game = "";
+      function refresh() {
+        game       = String(document.getElementById("game").value).toLowerCase();
+        playersDiv = document.getElementById("players");
+        playersDiv.innerHTML = ""; // Clear player list
+        google.script.run.withSuccessHandler(function(retVal) {
+          console.log(retVal);
+          retVal.forEach(function(player) {
+            var playerLabel = document.createElement('p');
+            playerLabel.innerHTML = player["name"] + ":\n";
+            playersDiv.appendChild(playerLabel);
+          });
+        }).getPlayers(game);
+      }
+      function reset() {
+        // body...
+      }
+    </script>
+  </head>
+  <body>
+    Game  : <input  id="game"   value = ""><br>
+    <button id="refresh"  type="button" onclick="refresh()">Refresh</button><br>
+    <div    id="players"></div>
+    Lives : <input  id="lives"  value = "3"  type="number"><br>
+    Length: <input  id="length" value = "15" type="number">mins<br>
+    <button id="reset"  type="button" onclick="reset()">Update</button>
+  </body>
+</html>
