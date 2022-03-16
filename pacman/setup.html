@@ -3,8 +3,23 @@
   <head>
     <base target="_top">
 
+    <!--Google Font: https://fonts.google.com/specimen/Press+Start+2P#standard-styles -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+      /* The * selects all elements in the document */
+      html * {
+        font-size: 12px;
+        font-family: 'Press Start 2P', cursive;
+      }
+    </style>
+
     <script type="text/javascript">
+      const playerStates = ["pacman", "inky", "blinky", "pinky", "clyde", "none"];
       var game = "";
+      var players = "";
       function refresh() {
         game       = String(document.getElementById("game").value).toLowerCase();
         playersDiv = document.getElementById("players");
@@ -15,11 +30,32 @@
             var playerLabel = document.createElement('p');
             playerLabel.innerHTML = player["name"] + ":\n";
             playersDiv.appendChild(playerLabel);
+            playerStates.forEach(function(state) {
+              var radioInput = document.createElement('input');
+              radioInput.setAttribute('type', 'radio');
+              radioInput.setAttribute('name',  player["name"]);
+              radioInput.setAttribute('value', state);
+              playersDiv.appendChild(radioInput);
+              var label = document.createElement('label'); // Should prob be a "label" tag
+              label.innerHTML = state;
+              playersDiv.appendChild(label);
+              playersDiv.appendChild(document.createElement('br'));
+            });
           });
+          players = retVal;
         }).getPlayers(game);
       }
       function reset() {
-        // body...
+        players.forEach(function(player) {
+          var playerStates = document.getElementsByName(player["name"]);
+          var playerState = "";
+          for(var i = 0; i < playerStates.length; i++){
+            if(playerStates[i].checked){
+              playerState = playerStates[i].value;
+            }
+          }
+          console.log(player["name"]+": "+playerState);
+        });
       }
     </script>
   </head>
@@ -29,6 +65,6 @@
     <div    id="players"></div>
     Lives : <input  id="lives"  value = "3"  type="number"><br>
     Length: <input  id="length" value = "15" type="number">mins<br>
-    <button id="reset"  type="button" onclick="reset()">Update</button>
+    <button id="reset"  type="button" onclick="reset()">Reset</button>
   </body>
 </html>
