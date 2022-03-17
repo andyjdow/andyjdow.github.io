@@ -7,6 +7,9 @@ function doGet(e) {
         if (e.parameter["state"] == "setup") {
           htmlOutput = HtmlService.createHtmlOutputFromFile('setup');
         }
+        if (e.parameter["state"] == "design") {
+          htmlOutput = HtmlService.createHtmlOutputFromFile('design');
+        }
       }
     }
   }
@@ -226,17 +229,17 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     }
   }
   return gameStatus;
- }
+}
 
- function getPlayers(game="test") {
-   Logger.log("getPlayers...");
-   // 
-   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
-   var playerSheet = SpreadsheetApp.getActiveSheet();
-   var playerData  = playerSheet.getDataRange().getValues();
-   var players = [];
-   for (var i = 0; i < playerData.length; i++) {
+function getPlayers(game="test") {
+  Logger.log("getPlayers...");
+  // 
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
+  var playerSheet = SpreadsheetApp.getActiveSheet();
+  var playerData  = playerSheet.getDataRange().getValues();
+  var players = [];
+  for (var i = 0; i < playerData.length; i++) {
     if (playerData[i][pGame] == game) {
       var playerStatus = {
         "name"     : playerData[i][pName],
@@ -251,22 +254,44 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     }
   }
   return players;
- }
+}
 
- function resetPlayers(players,lives=3,gameLength=-1) {
-   Logger.log("resetPlayers...");
-   // 
-   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
-   var playerSheet = SpreadsheetApp.getActiveSheet();
-   players.forEach(function(player) {
-     var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
-     var playerData  = playerRange.getValues();
-      playerData[0][pState]     = player["state"];
-      playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
-      if (player["state"]=="pacman") {
-        playerData[0][pSubState] = lives;
+function resetPlayers(players,lives=3,gameLength=-1) {
+  Logger.log("resetPlayers...");
+  // 
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
+  var playerSheet = SpreadsheetApp.getActiveSheet();
+  players.forEach(function(player) {
+    var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
+    var playerData  = playerRange.getValues();
+     playerData[0][pState]     = player["state"];
+     playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+     if (player["state"]=="pacman") {
+       playerData[0][pSubState] = lives;
+     }
+     playerRange.setValues(playerData);
+  });
+}
+
+function getObjects(game="test") {
+  Logger.log("getObjects...");
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Objects'));
+  var objectSheet = SpreadsheetApp.getActiveSheet();
+  var objectData  = objectSheet.getDataRange().getValues();
+  var objects = [];
+  for (var i = 0; i < objectData.length; i++) {
+    // Check object is for this game and that it is "active"
+    if (objectData[i][oGame] == game && objectData[i][oActive] == 1) {
+      var objectStatus = {
+        "name"  : objectData[i][oName],
+        "lat"   : objectData[i][oLat],
+        "lng"   : objectData[i][oLng],
+        "idx"   : i
       }
-      playerRange.setValues(playerData);
-   });
- }
+      objects.push(objectStatus);
+    }
+  }
+  return objects;
+}
