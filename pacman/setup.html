@@ -48,14 +48,21 @@
       function reset() {
         players.forEach(function(player) {
           var playerStates = document.getElementsByName(player["name"]);
-          var playerState = "";
+          var playerState = "registered";
           for(var i = 0; i < playerStates.length; i++){
             if(playerStates[i].checked){
               playerState = playerStates[i].value;
             }
           }
           console.log(player["name"]+": "+playerState);
+          player["state"] = playerState;
         });
+        console.log(players);
+        var lives       = document.getElementById("lives").value;
+        var gameLength  = document.getElementById("length").value;
+        google.script.run.withSuccessHandler(function(retVal) {
+          console.log("Players reset!")
+        }).resetPlayers(players,lives,gameLength);
       }
     </script>
   </head>
@@ -64,7 +71,7 @@
     <button id="refresh"  type="button" onclick="refresh()">Refresh</button><br>
     <div    id="players"></div>
     Lives : <input  id="lives"  value = "3"  type="number"><br>
-    Length: <input  id="length" value = "15" type="number">mins<br>
+    Length: <input  id="length" value = "-1" type="number">mins<br>
     <button id="reset"  type="button" onclick="reset()">Reset</button>
   </body>
 </html>

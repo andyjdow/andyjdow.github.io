@@ -89,18 +89,19 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
   var playerSheet = SpreadsheetApp.getActiveSheet();
 
-  // First update player position
-  var playerRange = playerSheet.getRange(playerIdx+1,1,1,pGameEnd+1); // All columns!
-  var playerData  = playerRange.getValues();
-  if (lat != -1) { 
-    playerData[0][pLat] = lat;
-    playerData[0][pLng] = lng;
-  }
-  playerRange.setValues(playerData);
-
   // Try to lock (wait 1sec??) and then update game state
   var lock = LockService.getScriptLock();
   if (lock.tryLock(1000)) {
+
+    // First update player position
+    var playerRange = playerSheet.getRange(playerIdx+1,1,1,pGameEnd+1); // All columns!
+    var playerData  = playerRange.getValues();
+    if (lat != -1) { 
+      playerData[0][pLat] = lat;
+      playerData[0][pLng] = lng;
+    }
+    playerRange.setValues(playerData);
+
     // 
     var ghostsVulnerable = false;
     // Fetch all player & object data
@@ -250,4 +251,22 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     }
   }
   return players;
+ }
+
+ function resetPlayers(players,lives=3,gameLength=-1) {
+   Logger.log("resetPlayers...");
+   // 
+   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
+   var playerSheet = SpreadsheetApp.getActiveSheet();
+   players.forEach(function(player) {
+     var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
+     var playerData  = playerRange.getValues();
+      playerData[0][pState]     = player["state"];
+      playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+      if (player["state"]=="pacman") {
+        playerData[0][pSubState] = lives;
+      }
+      playerRange.setValues(playerData);
+   });
  }
