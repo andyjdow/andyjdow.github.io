@@ -63,6 +63,9 @@
         google.script.run.withSuccessHandler(function(retVal) {
           console.log("Players reset!")
         }).resetPlayers(players,lives,gameLength);
+        google.script.run.withSuccessHandler(function(retVal) {
+          console.log("Objects reset!")
+        }).resetObjects(game);
       }
     </script>
   </head>

@@ -33,8 +33,9 @@
       let map;
 
       var game        = "";
-      var objects     = "";
+      var objects     = [];
       var allMarkers  = [];
+      var unsavedIdx  = -1;
       
       function getMarkerURL(key) {
         switch (key) {
@@ -85,29 +86,32 @@
         }
       }
 
-      function drawMarkers() {
+      function clearMarkers() {
         // Clear all markers
         allMarkers.forEach(function(marker) {
+          console.log("Clearing: "+marker.getTitle())
           marker.setMap(null);
         });
         allMarkers  = [];
+      }
+
+      function drawMarker(object) {
         // 
-        objects.forEach(function(object) {
         var markerURL = getMarkerURL(object["name"]);
         var markerID = "marker"+object["idx"];
-        console.log("Creating marker")
-          allMarkers[markerID] = new google.maps.Marker({
-            position: {lat: object["lat"], lng: object["lng"]},
-            map,
-            title: object["name"],
-            icon: {
-              url: markerURL,
-              origin: new google.maps.Point(16,16),
-              anchor: new google.maps.Point(10,10),
-              scaledSize: new google.maps.Size(20,20),
-            }
-          });
-      });
+        console.log("Creating marker: "+markerID);
+        // origin: new google.maps.Point(16,16),
+        var newMarker = new google.maps.Marker({
+          position: {lat: object["lat"], lng: object["lng"]},
+          map,
+          title: markerID,
+          icon: {
+            url: markerURL,
+            anchor: new google.maps.Point(10,10),
+            scaledSize: new google.maps.Size(20,20),
+          }
+        });
+        allMarkers.push(newMarker);
       }
 
       function initMap() {
@@ -222,52 +226,42 @@
           }
           var object = {
             "name"  : objectType,
-            "lat"   : mapsMouseEvent.latLng.lat,
-            "lng"   : mapsMouseEvent.latLng.lng,
-            "idx"   : -1
+            "lat"   : mapsMouseEvent.latLng.lat(),
+            "lng"   : mapsMouseEvent.latLng.lng(),
+            "idx"   : unsavedIdx
           }
+          unsavedIdx--;
           objects.push(object);
-          // var markerURL = getMarkerURL(objectType);
-          // var objectMarker = new google.maps.Marker({
-          //   position: mapsMouseEvent.latLng,
-          //   map,
-          //   title: objectType,
-          //   icon: {
-          //     url: markerURL,
-          //     scaledSize: new google.maps.Size(20,20)
-          //   }
-          // });
-          // allMarkers.push(objectMarker);
-          drawMarkers();
+          drawMarker(object);
         });
       }
 
       function load() {
-        game = String(document.getElementById("game").value).toLowerCase();
-        // // Clear all markers
-        // allMarkers.forEach(function(object) {
-        //   object.setMap(null);
-        // });
-        // allMarkers  = [];
+        game    = String(document.getElementById("game").value).toLowerCase();
+        clearMarkers();
         google.script.run.withSuccessHandler(function(retVal) {
-          objects = retVal;
+          objects = retVal; // Reset the object list
           console.log(objects);
-          // retVal.forEach(function(object) {
-          //   var markerURL = getMarkerURL(object["name"]);
-          //   var markerID = "marker"+object["idx"];
-          //   console.log("Creating marker")
-          //     allMarkers[markerID] = new google.maps.Marker({
-          //       position: {lat: object["lat"], lng: object["lng"]},
-          //       map,
-          //       title: object["name"],
-          //       icon: {
-          //         url: markerURL,
-          //         scaledSize: new google.maps.Size(20,20)
-          //       }
-          //     });
-          // });
-          drawMarkers();
+          objects.forEach(function(object) {
+            drawMarker(object);
+          });
         }).getObjects(game);
+      }
+
+      function undo() {
+        objects.pop();
+        clearMarkers();
+        objects.forEach(function(object) {
+          drawMarker(object);
+        });
+      }
+
+      function save() {
+        game    = String(document.getElementById("game").value).toLowerCase();
+        google.script.run.withSuccessHandler(function(retVal) {
+          console.log("Saved!!")
+          load(game); // Pickup idx of newly saved objects
+        }).updateObjects(game,objects);
       }
     </script>
   </head>
@@ -281,6 +275,7 @@
     <input type="radio" name="object" value="apple">apple<br>
     <input type="radio" name="object" value="orange">orange<br>
     <input type="radio" name="object" value="strawberry">strawberry<br>
+    <button id="undo" type="button" onclick="undo()">Undo</button>
     <div id="map">No map loaded.....</div>
     <button id="save" type="button" onclick="save()">Save</button>
   </body>

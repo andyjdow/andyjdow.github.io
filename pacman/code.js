@@ -262,16 +262,20 @@ function resetPlayers(players,lives=3,gameLength=-1) {
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
   var playerSheet = SpreadsheetApp.getActiveSheet();
-  players.forEach(function(player) {
-    var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
-    var playerData  = playerRange.getValues();
-     playerData[0][pState]     = player["state"];
-     playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
-     if (player["state"]=="pacman") {
-       playerData[0][pSubState] = lives;
-     }
-     playerRange.setValues(playerData);
-  });
+  var lock = LockService.getScriptLock();
+  if (lock.tryLock(60000)) {  // 60 sec wait
+    players.forEach(function(player) {
+      var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
+      var playerData  = playerRange.getValues();
+       playerData[0][pState]     = player["state"];
+       playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+       if (player["state"]=="pacman") {
+         playerData[0][pSubState] = lives;
+       }
+       playerRange.setValues(playerData);
+    });
+  }
+  lock.releaseLock();
 }
 
 function getObjects(game="test") {
@@ -294,4 +298,39 @@ function getObjects(game="test") {
     }
   }
   return objects;
+}
+
+function resetObjects(game="test") {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Objects'));
+  var objectSheet = SpreadsheetApp.getActiveSheet();
+  var objectRange = objectSheet.getDataRange();
+  var objectData  = objectRange.getValues();
+  var lock = LockService.getScriptLock();
+  if (lock.tryLock(60000)) {
+    for (var i = 0; i < objectData.length; i++) {
+      // Check object is for this game
+      if (objectData[i][oGame] == game) {
+        objectData[i][oActive] = 1; // set to active
+      }
+    }
+    objectRange.setValues(objectData);
+  }
+  lock.releaseLock();
+}
+
+function updateObjects(game,objects) {
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Objects'));
+  var objectSheet = SpreadsheetApp.getActiveSheet();
+  var lock = LockService.getScriptLock();
+  if (lock.tryLock(60000)) {
+    objects.forEach(function(object) {
+      // Only interested in new objects
+      if (object["idx"] < 0) {
+        objectSheet.appendRow([game, object["name"], object["lat"], object["lng"], 0.0001, 1, 0 ]);
+      }
+    });
+  }
+  lock.releaseLock()
 }
