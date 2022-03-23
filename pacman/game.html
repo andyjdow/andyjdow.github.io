@@ -184,6 +184,8 @@
 
       var game          = "";
       var player        = "";
+      var score         = 0;
+      var lives         = 0;
       var playerIdx     = -1;
       var allMarkers    = {};
       var timer         = -1;
@@ -220,12 +222,6 @@
                   map,
                   title: item["name"],
                   icon: {
-                    // From: http://kml4earth.appspot.com/icons.html
-                    // url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-                    // url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
-                    // url: "http://maps.google.com/mapfiles/kml/paddle/ylw-stars-lv.png"
-                    // url: "http://maps.google.com/mapfiles/kml/paddle/"+playerName[0]+".png"
-                    // url: "https://andyjdow.github.io/pacman/assets/pacman_right.gif"
                     url: markerURL,
                     scaledSize: new google.maps.Size(20,20)
                   }
@@ -236,14 +232,27 @@
                 if (currPosition != { lat: -1, lng: -1 }) {
                   map.setCenter({lat: item["lat"], lng: item["lng"]});
                 }
+                if (score != item["score"]) {
+                  score = item["score"];
+                  var scoreDiv  = document.getElementById("score");
+                  scoreDiv.innerHTML = game + " - " +player + ": "+score;
+                }
+                if (item["state"] == "pacman" || item["state"] == "pacman_dead") {
+                  if (lives != item["lives"]) {
+                    lives = item["lives"];
+                    var livesDiv  = document.getElementById("lives");
+                    livesDiv.innerHTML = "";
+                    for (var i = 0; i < lives; i++) {
+                      var lifeImg = document.createElement('img');
+                      lifeImg.setAttribute('src', 'https://andyjdow.github.io/pacman/assets/pacman_right.gif');
+                      lifeImg.setAttribute('height', '32px');
+                      lifeImg.setAttribute('width', '32px');
+                      livesDiv.appendChild(lifeImg);
+                    }
+                  }
+                }
               }
             } // Not registered
-            //  else if (item["name"] in allMarkers) {
-            //   // Otherwise remove marker
-            //   allMarkers[item["name"]].setMap(null);
-            //   // allMarkers.splice(allMarkers.indexOf(item["name"]),1); // Remove array element
-            //   delete allMarkers[item["name"]];
-            // }
           }); // foreach player
           // Now the objects
           retVal["objects"].forEach(function(item) {
@@ -262,6 +271,7 @@
                 title: item["name"],
                 icon: {
                   url: markerURL,
+                  anchor: new google.maps.Point(10,10),
                   scaledSize: new google.maps.Size(20,20)
                 }
               });
@@ -279,9 +289,12 @@
       function start() {
         game       = String(document.getElementById("game").value).toLowerCase();
         player     = String(document.getElementById("player").value).toLowerCase();
+        var setupDiv  = document.getElementById("setup");
+        var scoreDiv  = document.getElementById("score");
         // Hide inputs
-        var setup  = document.getElementById("setup");
-        setup.style.display = "none";
+        setupDiv.style.display = "none";
+        // Display config & score
+        scoreDiv.innerHTML = game + " - " +player + ": "+score;
         // Register player on server
         google.script.run.withSuccessHandler(function(retVal) {
           playerIdx = retVal;
@@ -300,7 +313,9 @@
 
           // });
         },
-        5000); // every 5 secs
+        // 5000); // every 5 secs
+        // 2500); // every 2.5 secs
+        1000); // every 1 secs
         // Start position monitor
         watchPosition = navigator.geolocation.watchPosition(function(position) {
           // updateGame(position.coords.latitude,position.coords.longitude);
@@ -320,6 +335,10 @@
       Team: <input id="player" value = ""><br> 
       <button id="start" type="button" onclick="start()">Start!</button>
     </div>
+    <div id="score">
+    </div>
     <div id="map">No map loaded.....</div>
+    <div id="lives">
+    </div>
   </body>
 </html>

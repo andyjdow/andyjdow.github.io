@@ -15,7 +15,7 @@ function doGet(e) {
   }
   // user-scalable require to stop auto-zooming when using an input box on a mobile device
   htmlOutput.addMetaTag('viewport', 'width=device-width, initial-scale=1, user-scalable=no');
-  // htmlOutput.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // So we can embedded the web app in our own page (in an iframe)
+  htmlOutput.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // So we can embedded the web app in our own page (in an iframe)
   return htmlOutput;
 }
 
