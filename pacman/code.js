@@ -76,9 +76,9 @@ const oRange    = 4;
 const oActive   = 5;
 const oStateEnd = 6;
 
-const pacmanDeadTime      = 0.5 * 60000;
+const pacmanDeadTime      = 0.25 * 60000;
 const ghostVulnerableTime = 2 * 60000;
-const pacmanHitRange      = 0.0001;
+const pacmanHitRange      = 0.00005; // 0.0001;
 
 const ghosts = ["blinky", "inky", "pinky", "clyde"];
 
@@ -124,7 +124,29 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
             if (objectData[i][oName] == "bigdot") {
               ghostsVulnerable = true;
             }
-            playerData[playerIdx][pScore] += 1; // TODO: Score based on what has been eaten!
+            var score = 0;
+            switch (key) {
+            case "cherry":
+              score = 200;
+              break;
+            case "apple":
+              score = 200;
+              break;
+            case "orange":
+              score = 200;
+              break;
+            case "strawberry":
+              score = 200;
+              break;
+            case "smalldot":
+              score = 10;
+              break;
+            case "bigdot":
+              score = 50;
+              break;
+            default:
+            }
+            playerData[playerIdx][pScore] += score;
             objectData[i][oActive]         = 0; // Eaten!
           }
         }
@@ -140,11 +162,12 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
                     pacmanHitRange)) {
             // Who's eaten who?
             if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
-              playerData[playerIdx][pScore] += 1; // TODO: Score
+              playerData[playerIdx][pScore] += 500;
             } else {
               playerData[playerIdx][pState]    = "pacman_dead";
               playerData[playerIdx][pSubState]--; // Lives
               playerData[playerIdx][pStateEnd] = Date.now() + pacmanDeadTime;
+              playerData[i][pScore]            += 500; // Same points for eating pacman
               break;
             }
             // Always kill ghost
@@ -173,6 +196,9 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
             playerData[i][pState]    = "pacman_dead";
             playerData[i][pSubState]--; // Lives
             playerData[i][pStateEnd] = Date.now() + pacmanDeadTime;
+            // Ghost also dies
+            playerData[playerIdx][pSubState] = playerData[playerIdx][pState]; // Retain ghosts name!
+            playerData[playerIdx][pState]    = "ghost_dead";
             break;
           }
         }
@@ -256,7 +282,7 @@ function getPlayers(game="test") {
   return players;
 }
 
-function resetPlayers(players,lives=3,gameLength=-1) {
+function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
   Logger.log("resetPlayers...");
   // 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -271,6 +297,9 @@ function resetPlayers(players,lives=3,gameLength=-1) {
        playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
        if (player["state"]=="pacman") {
          playerData[0][pSubState] = lives;
+       }
+       if (clearScore==1) {
+        playerData[0][pScore] = 0;
        }
        playerRange.setValues(playerData);
     });
@@ -328,7 +357,7 @@ function updateObjects(game,objects) {
     objects.forEach(function(object) {
       // Only interested in new objects
       if (object["idx"] < 0) {
-        objectSheet.appendRow([game, object["name"], object["lat"], object["lng"], 0.0001, 1, 0 ]);
+        objectSheet.appendRow([game, object["name"], object["lat"], object["lng"], 0.00005, 1, 0 ]);
       }
     });
   }

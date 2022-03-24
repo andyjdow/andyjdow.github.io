@@ -60,9 +60,10 @@
         console.log(players);
         var lives       = document.getElementById("lives").value;
         var gameLength  = document.getElementById("length").value;
+        var clearScores = document.getElementById("scores").value;
         google.script.run.withSuccessHandler(function(retVal) {
           console.log("Players reset!")
-        }).resetPlayers(players,lives,gameLength);
+        }).resetPlayers(players,lives,gameLength,clearScores);
         google.script.run.withSuccessHandler(function(retVal) {
           console.log("Objects reset!")
         }).resetObjects(game);
@@ -75,6 +76,7 @@
     <div    id="players"></div>
     Lives : <input  id="lives"  value = "3"  type="number"><br>
     Length: <input  id="length" value = "-1" type="number">mins<br>
+    Clear scores: <input  id="scores" value = "0"  type="number"><br>
     <button id="reset"  type="button" onclick="reset()">Reset</button>
   </body>
 </html>

@@ -26,6 +26,16 @@
         font-size: 12px;
         font-family: 'Press Start 2P', cursive;
       }
+      #setup,#scores,#lives,html {
+        background-color: #242f3e;
+        color: #9ca5b3;
+      }
+      #scores {
+        float: left;
+      }
+      #lives {
+        float: right;
+      }
     </style>
 
     <script type="text/javascript">
@@ -42,6 +52,7 @@
           streetViewControl: false,
           fullscreenControl: false,
           mapTypeControl: false,
+          zoomControl: false,
 
           styles: [
             { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
@@ -202,7 +213,7 @@
         google.script.run.withSuccessHandler(function(retVal) {
           var updatedMarkers = {};
           retVal["players"].forEach(function(item) {
-            console.log(item);
+            // console.log(item);
             if (item["state"] != "registered" && item["state"] != "") {
               var markerURL = getMarkerURL(item["state"]);
               
@@ -235,18 +246,19 @@
                 if (score != item["score"]) {
                   score = item["score"];
                   var scoreDiv  = document.getElementById("score");
-                  scoreDiv.innerHTML = game + " - " +player + ": "+score;
+                  scoreDiv.innerHTML = "Score: "+score;
                 }
                 if (item["state"] == "pacman" || item["state"] == "pacman_dead") {
-                  if (lives != item["lives"]) {
-                    lives = item["lives"];
+                  if (lives != item["substate"]) {
+                    lives = item["substate"];
                     var livesDiv  = document.getElementById("lives");
                     livesDiv.innerHTML = "";
                     for (var i = 0; i < lives; i++) {
+                      // console.log("Adding lives: "+i);
                       var lifeImg = document.createElement('img');
-                      lifeImg.setAttribute('src', 'https://andyjdow.github.io/pacman/assets/pacman_right.gif');
-                      lifeImg.setAttribute('height', '32px');
-                      lifeImg.setAttribute('width', '32px');
+                      lifeImg.setAttribute('src', 'https://andyjdow.github.io/pacman/assets/pacman_static.gif');
+                      lifeImg.setAttribute('height', '20px');
+                      lifeImg.setAttribute('width', '20px');
                       livesDiv.appendChild(lifeImg);
                     }
                   }
@@ -256,7 +268,7 @@
           }); // foreach player
           // Now the objects
           retVal["objects"].forEach(function(item) {
-            console.log(item);
+            // console.log(item);
             var markerURL = getMarkerURL(item["name"]); // Different key to the players
             var markerID = "marker"+item["idx"];
             if (markerID in allMarkers) {
@@ -294,7 +306,7 @@
         // Hide inputs
         setupDiv.style.display = "none";
         // Display config & score
-        scoreDiv.innerHTML = game + " - " +player + ": "+score;
+        scoreDiv.innerHTML = "Score: "+score;
         // Register player on server
         google.script.run.withSuccessHandler(function(retVal) {
           playerIdx = retVal;
@@ -333,12 +345,11 @@
     <div id="setup">
       Game: <input id="game" value = ""><br>
       Team: <input id="player" value = ""><br> 
-      <button id="start" type="button" onclick="start()">Start!</button>
+      <button id="start" type="button" onclick="start()">Start</button>
     </div>
-    <div id="score">
-    </div>
+    <!-- Using spans as they are "inline", divs will take new lines -->
+    <span id="score"></span>
+    <span id="lives"></span>
     <div id="map">No map loaded.....</div>
-    <div id="lives">
-    </div>
   </body>
 </html>
