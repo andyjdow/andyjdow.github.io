@@ -78,7 +78,8 @@ const oStateEnd = 6;
 
 const pacmanDeadTime      = 0.25 * 60000;
 const ghostVulnerableTime = 2 * 60000;
-const pacmanHitRange      = 0.00005; // 0.0001;
+const pacmanHitRange      = 0.0001; // 0.00005; // 
+const defaultObjectRange  = 0.0001;
 
 const ghosts = ["blinky", "inky", "pinky", "clyde"];
 
@@ -105,120 +106,135 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     }
     playerRange.setValues(playerData);
 
-    // 
-    var ghostsVulnerable = false;
-    // Fetch all player & object data
-    playerRange   = playerSheet.getDataRange()
-    playerData    = playerSheet.getDataRange().getValues();
-    var objectRange = objectSheet.getDataRange();
-    var objectData  = objectRange.getValues();
-    if (playerData[playerIdx][pState] == "pacman") {
-      for (var i = 0; i < objectData.length; i++) {
-        // Check object is for this game and that it is "active"
-        if (objectData[i][oGame] == game && objectData[i][oActive] == 1) {
-          if (isHit(playerData[playerIdx][pLat],
-                    playerData[playerIdx][pLng],
-                    objectData[i][oLat],
-                    objectData[i][oLng],
-                    objectData[i][oRange])) {
-            if (objectData[i][oName] == "bigdot") {
-              ghostsVulnerable = true;
-            }
-            var score = 0;
-            switch (key) {
-            case "cherry":
-              score = 200;
-              break;
-            case "apple":
-              score = 200;
-              break;
-            case "orange":
-              score = 200;
-              break;
-            case "strawberry":
-              score = 200;
-              break;
-            case "smalldot":
-              score = 10;
-              break;
-            case "bigdot":
-              score = 50;
-              break;
-            default:
-            }
-            playerData[playerIdx][pScore] += score;
-            objectData[i][oActive]         = 0; // Eaten!
-          }
-        }
-      }
-      // Now check other players for ghosts
-      // TODO: Randomise order
-      for (var i = 0; i < playerData.length; i++) {
-        if (ghosts.includes(playerData[i][pState]) || playerData[i][pState] == "ghost_vulnerable") {
-          if (isHit(playerData[playerIdx][pLat],
-                    playerData[playerIdx][pLng],
-                    playerData[i][pLat],
-                    playerData[i][pLng],
-                    pacmanHitRange)) {
-            // Who's eaten who?
-            if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
-              playerData[playerIdx][pScore] += 500;
-            } else {
-              playerData[playerIdx][pState]    = "pacman_dead";
-              playerData[playerIdx][pSubState]--; // Lives
-              playerData[playerIdx][pStateEnd] = Date.now() + pacmanDeadTime;
-              playerData[i][pScore]            += 500; // Same points for eating pacman
-              break;
-            }
-            // Always kill ghost
-            if (playerData[i][pState] != "ghost_vulnerable") {
-              playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
-            }
-            playerData[i][pState]      = "ghost_dead";
+    // Check not game over
+    var gameOver = false;
+    if (playerData[0][pGameEnd] < Date.now()) {
 
-          } else if (ghostsVulnerable && playerData[i][pState] != "ghost_vulnerable") {
-            // Not a hit so check if we need to update state
-            playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
-            playerData[i][pState]    = "ghost_vulnerable";
-            playerData[i][pStateEnd] = Date.now() + ghostVulnerableTime;
+      // 
+      var ghostsVulnerable = false;
+      // Fetch all player & object data
+      playerRange   = playerSheet.getDataRange()
+      playerData    = playerSheet.getDataRange().getValues();
+      var objectRange = objectSheet.getDataRange();
+      var objectData  = objectRange.getValues();
+      if (playerData[playerIdx][pState] == "pacman") {
+        for (var i = 0; i < objectData.length; i++) {
+          // Check object is for this game and that it is "active"
+          if (objectData[i][oGame] == game && objectData[i][oActive] == 1) {
+            if (isHit(playerData[playerIdx][pLat],
+                      playerData[playerIdx][pLng],
+                      objectData[i][oLat],
+                      objectData[i][oLng],
+                      objectData[i][oRange])) {
+              if (objectData[i][oName] == "bigdot") {
+                ghostsVulnerable = true;
+              }
+              var score = 0;
+              switch (key) {
+              case "cherry":
+                score = 200;
+                break;
+              case "apple":
+                score = 200;
+                break;
+              case "orange":
+                score = 200;
+                break;
+              case "strawberry":
+                score = 200;
+                break;
+              case "smalldot":
+                score = 10;
+                break;
+              case "bigdot":
+                score = 50;
+                break;
+              default:
+              }
+              playerData[playerIdx][pScore] += score;
+              objectData[i][oActive]         = 0; // Eaten!
+            }
           }
         }
-      }
-    } else if (ghosts.includes(playerData[playerIdx][pState])) {
-      // Look for pacman and see if we can eat him!
-      for (var i = 0; i < playerData.length; i++) {
-        if (playerData[i][pState] == "pacman") {
-          if (isHit(playerData[playerIdx][pLat],
-                    playerData[playerIdx][pLng],
-                    playerData[i][pLat],
-                    playerData[i][pLng],
-                    pacmanHitRange)) {
-            playerData[i][pState]    = "pacman_dead";
-            playerData[i][pSubState]--; // Lives
-            playerData[i][pStateEnd] = Date.now() + pacmanDeadTime;
-            // Ghost also dies
-            playerData[playerIdx][pSubState] = playerData[playerIdx][pState]; // Retain ghosts name!
-            playerData[playerIdx][pState]    = "ghost_dead";
-            break;
+        // Now check other players for ghosts
+        // TODO: Randomise order
+        for (var i = 0; i < playerData.length; i++) {
+          if (ghosts.includes(playerData[i][pState]) || playerData[i][pState] == "ghost_vulnerable") {
+            if (isHit(playerData[playerIdx][pLat],
+                      playerData[playerIdx][pLng],
+                      playerData[i][pLat],
+                      playerData[i][pLng],
+                      pacmanHitRange)) {
+              // Who's eaten who?
+              if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
+                playerData[playerIdx][pScore] += 500;
+              } else {
+                playerData[playerIdx][pState]    = "pacman_dead";
+                playerData[playerIdx][pSubState]--; // Lives
+                playerData[playerIdx][pStateEnd] = Date.now() + pacmanDeadTime;
+                playerData[i][pScore]            += 500; // Same points for eating pacman
+                break;
+              }
+              // Always kill ghost
+              if (playerData[i][pState] != "ghost_vulnerable") {
+                playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
+              }
+              playerData[i][pState]      = "ghost_dead";
+
+            } else if (ghostsVulnerable && playerData[i][pState] != "ghost_vulnerable") {
+              // Not a hit so check if we need to update state
+              playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
+              playerData[i][pState]    = "ghost_vulnerable";
+              playerData[i][pStateEnd] = Date.now() + ghostVulnerableTime;
+            }
           }
         }
+      } else if (ghosts.includes(playerData[playerIdx][pState])) {
+        // Look for pacman and see if we can eat him!
+        for (var i = 0; i < playerData.length; i++) {
+          if (playerData[i][pState] == "pacman") {
+            if (isHit(playerData[playerIdx][pLat],
+                      playerData[playerIdx][pLng],
+                      playerData[i][pLat],
+                      playerData[i][pLng],
+                      pacmanHitRange)) {
+              playerData[i][pState]    = "pacman_dead";
+              playerData[i][pSubState]--; // Lives
+              playerData[i][pStateEnd] = Date.now() + pacmanDeadTime;
+              // Ghost also dies
+              playerData[playerIdx][pSubState] = playerData[playerIdx][pState]; // Retain ghosts name!
+              playerData[playerIdx][pState]    = "ghost_dead";
+              playerData[playerIdx][pScore]    += 500; // Same score for the ghost
+              break;
+            }
+          }
+        }
+      } else if (playerData[playerIdx][pState] == "pacman_dead") {
+        if (Date.now() > playerData[playerIdx][pStateEnd] && playerData[playerIdx][pSubState] > 0) {
+          playerData[playerIdx][pState] = "pacman";
+        }
+        // Had pacman run out of lives
+        if (playerData[playerIdx][pSubState] == 0) {
+          // Update game end for all players
+          // TODO:
+        }
+      } else if (playerData[playerIdx][pState] == "ghost_vulnerable") {
+        if (Date.now() > playerData[playerIdx][pStateEnd]) {
+          playerData[playerIdx][pState] = playerData[playerIdx][pSubState]; // Re-instate ghost name
+        }
+      } else if (playerData[playerIdx][pState] == "ghost_dead") {
+        // TODO: check for start zone...
       }
-    } else if (playerData[playerIdx][pState] == "pacman_dead") {
-      if (Date.now() > playerData[playerIdx][pStateEnd] && playerData[playerIdx][pSubState] > 0) {
-        playerData[playerIdx][pState] = "pacman";
-      }
-    } else if (playerData[playerIdx][pState] == "ghost_vulnerable") {
-      if (Date.now() > playerData[playerIdx][pStateEnd]) {
-        playerData[playerIdx][pState] = playerData[playerIdx][pSubState]; // Re-instate ghost name
-      }
-    } else if (playerData[playerIdx][pState] == "ghost_dead") {
-      // TODO: check for start zone...
+      // Update sheets
+      playerRange.setValues(playerData); 
+      objectRange.setValues(objectData);
     }
-    // Update sheets
-    playerRange.setValues(playerData); 
-    objectRange.setValues(objectData);
+
     // 
     lock.releaseLock();
+    
+  } else {
+    gameOver = true;
   }
 
   // Now fetch all player  & object data and return state to client
@@ -236,6 +252,10 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         "lat"      : playerData[i][pLat],
         "lng"      : playerData[i][pLng],
         "idx"      : i
+      }
+      // Override sub-state
+      if (gameOver) {
+        playerStatus["substate"] = "gameover";
       }
       gameStatus["players"].push(playerStatus);
     }
@@ -294,7 +314,11 @@ function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
       var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
       var playerData  = playerRange.getValues();
        playerData[0][pState]     = player["state"];
-       playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+       if (gameLength == -1) {
+         playerData[0][pGameEnd]   = -1;
+       } else {
+         playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+       }
        if (player["state"]=="pacman") {
          playerData[0][pSubState] = lives;
        }
@@ -357,7 +381,7 @@ function updateObjects(game,objects) {
     objects.forEach(function(object) {
       // Only interested in new objects
       if (object["idx"] < 0) {
-        objectSheet.appendRow([game, object["name"], object["lat"], object["lng"], 0.00005, 1, 0 ]);
+        objectSheet.appendRow([game, object["name"], object["lat"], object["lng"], defaultObjectRange, 1, 0 ]);
       }
     });
   }
