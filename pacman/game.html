@@ -36,6 +36,20 @@
       #lives {
         float: right;
       }
+      /* So we can overlay the gameover/leader board
+        https://www.w3schools.com/howto/howto_css_image_text.asp
+       */
+      #mapcontainer {
+        position: relative;
+      }
+      #leader {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        color: #FFFF00;
+      }
     </style>
 
     <script type="text/javascript">
@@ -200,8 +214,10 @@
       var playerIdx     = -1;
       var allMarkers    = {};
       var timer         = -1;
+      var gameOver      = false;
       var watchOptions  = {
-        enableHighAccuracy: true,
+        // enableHighAccuracy: true,
+        enableHighAccuracy: false, // Speed up updates
         timeout: Infinity, // maximum length of time (in milliseconds) the device is allowed to take in order to return a position
         maximumAge: 0      // maximum age in milliseconds of a possible cached position that is acceptable to return
       };
@@ -212,8 +228,16 @@
       function updateGame(lat,lng) {
         google.script.run.withSuccessHandler(function(retVal) {
           var updatedMarkers = {};
+          gameOver           = false;
+          var scores         = [];
           retVal["players"].forEach(function(item) {
-            // console.log(item);
+            console.log(item);
+            if (item["substate"] == "gameover") {
+              gameOver = true;
+            }
+            // scores = scores + item["name"] + " .... " +item["score"] + "<br>";
+            scores.push([item["name"],item["score"]]);
+
             if (item["state"] != "registered" && item["state"] != "") {
               var markerURL = getMarkerURL(item["state"]);
               
@@ -249,7 +273,7 @@
                   scoreDiv.innerHTML = "Score: "+score;
                 }
                 if (item["state"] == "pacman" || item["state"] == "pacman_dead") {
-                  if (lives != item["substate"]) {
+                  if (lives != item["substate"] && item["substate"] != "gameover") {
                     lives = item["substate"];
                     var livesDiv  = document.getElementById("lives");
                     livesDiv.innerHTML = "";
@@ -295,6 +319,21 @@
           }
           // Update markers
           allMarkers = updatedMarkers;
+          // Is it game over?
+          var leaderDiv  = document.getElementById("leader");
+
+          if (gameOver) {
+            leaderDiv.style.backgroundColor = "#242f3e7F"; // #242f3e<Alpha>
+            // leaderDiv.innerHTML = "Game Over<br><br>"+scores;
+            leaderDiv.innerHTML = "Game Over<br><br>";
+            scores = scores.sort(function(a,b) {return b[1]-a[1];});
+            scores.forEach(function(item) {
+              leaderDiv.innerHTML = leaderDiv.innerHTML + item[0] + " ... " + item[1] +"<br>"; 
+            });
+          } else {
+            leaderDiv.innerHTML = "";
+            leaderDiv.style.backgroundColor = "transparent";
+          }
         }).updatePlayer(game,playerIdx,lat,lng); 
       }
 
@@ -350,6 +389,9 @@
     <!-- Using spans as they are "inline", divs will take new lines -->
     <span id="score"></span>
     <span id="lives"></span>
-    <div id="map">No map loaded.....</div>
+    <div id="mapcontainer">
+      <div id="map">No map loaded.....</div>
+      <div id="leader"></div>
+    </div>
   </body>
 </html>

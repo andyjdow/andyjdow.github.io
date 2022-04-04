@@ -93,6 +93,8 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
   var playerSheet = SpreadsheetApp.getActiveSheet();
 
+  var gameOver = false;
+
   // Try to lock (wait 1sec??) and then update game state
   var lock = LockService.getScriptLock();
   if (lock.tryLock(1000)) {
@@ -107,8 +109,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     playerRange.setValues(playerData);
 
     // Check not game over
-    var gameOver = false;
-    if (playerData[0][pGameEnd] < Date.now()) {
+    if (Date.now() < playerData[0][pGameEnd] || playerData[0][pGameEnd] == -1) {
 
       // 
       var ghostsVulnerable = false;
@@ -117,75 +118,82 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
       playerData    = playerSheet.getDataRange().getValues();
       var objectRange = objectSheet.getDataRange();
       var objectData  = objectRange.getValues();
+      var ghostHomeIdx = -1;
       if (playerData[playerIdx][pState] == "pacman") {
         for (var i = 0; i < objectData.length; i++) {
           // Check object is for this game and that it is "active"
           if (objectData[i][oGame] == game && objectData[i][oActive] == 1) {
-            if (isHit(playerData[playerIdx][pLat],
-                      playerData[playerIdx][pLng],
-                      objectData[i][oLat],
-                      objectData[i][oLng],
-                      objectData[i][oRange])) {
-              if (objectData[i][oName] == "bigdot") {
-                ghostsVulnerable = true;
+            if (objectData[i][oName] == "home") {
+              ghostHomeIdx = i;
+            } else {
+              if (isHit(playerData[playerIdx][pLat],
+                        playerData[playerIdx][pLng],
+                        objectData[i][oLat],
+                        objectData[i][oLng],
+                        objectData[i][oRange])) {
+                if (objectData[i][oName] == "bigdot") {
+                  ghostsVulnerable = true;
+                }
+                var score = 0;
+                switch (objectData[i][oName]) {
+                case "cherry":
+                  score = 200;
+                  break;
+                case "apple":
+                  score = 200;
+                  break;
+                case "orange":
+                  score = 200;
+                  break;
+                case "strawberry":
+                  score = 200;
+                  break;
+                case "smalldot":
+                  score = 10;
+                  break;
+                case "bigdot":
+                  score = 50;
+                  break;
+                default:
+                }
+                playerData[playerIdx][pScore] += score;
+                objectData[i][oActive]         = 0; // Eaten!
               }
-              var score = 0;
-              switch (key) {
-              case "cherry":
-                score = 200;
-                break;
-              case "apple":
-                score = 200;
-                break;
-              case "orange":
-                score = 200;
-                break;
-              case "strawberry":
-                score = 200;
-                break;
-              case "smalldot":
-                score = 10;
-                break;
-              case "bigdot":
-                score = 50;
-                break;
-              default:
-              }
-              playerData[playerIdx][pScore] += score;
-              objectData[i][oActive]         = 0; // Eaten!
             }
           }
         }
         // Now check other players for ghosts
         // TODO: Randomise order
         for (var i = 0; i < playerData.length; i++) {
-          if (ghosts.includes(playerData[i][pState]) || playerData[i][pState] == "ghost_vulnerable") {
-            if (isHit(playerData[playerIdx][pLat],
-                      playerData[playerIdx][pLng],
-                      playerData[i][pLat],
-                      playerData[i][pLng],
-                      pacmanHitRange)) {
-              // Who's eaten who?
-              if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
-                playerData[playerIdx][pScore] += 500;
-              } else {
-                playerData[playerIdx][pState]    = "pacman_dead";
-                playerData[playerIdx][pSubState]--; // Lives
-                playerData[playerIdx][pStateEnd] = Date.now() + pacmanDeadTime;
-                playerData[i][pScore]            += 500; // Same points for eating pacman
-                break;
-              }
-              // Always kill ghost
-              if (playerData[i][pState] != "ghost_vulnerable") {
-                playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
-              }
-              playerData[i][pState]      = "ghost_dead";
+          if (playerData[i][pGame] == game) {
+            if (ghosts.includes(playerData[i][pState]) || playerData[i][pState] == "ghost_vulnerable") {
+              if (isHit(playerData[playerIdx][pLat],
+                        playerData[playerIdx][pLng],
+                        playerData[i][pLat],
+                        playerData[i][pLng],
+                        pacmanHitRange)) {
+                // Who's eaten who?
+                if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
+                  playerData[playerIdx][pScore] += 500;
+                } else {
+                  playerData[playerIdx][pState]    = "pacman_dead";
+                  playerData[playerIdx][pSubState]--; // Lives
+                  playerData[playerIdx][pStateEnd] = Date.now() + pacmanDeadTime;
+                  playerData[i][pScore]            += 500; // Same points for eating pacman
+                  break;
+                }
+                // Always kill ghost
+                if (playerData[i][pState] != "ghost_vulnerable") {
+                  playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
+                }
+                playerData[i][pState]      = "ghost_dead";
 
-            } else if (ghostsVulnerable && playerData[i][pState] != "ghost_vulnerable") {
-              // Not a hit so check if we need to update state
-              playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
-              playerData[i][pState]    = "ghost_vulnerable";
-              playerData[i][pStateEnd] = Date.now() + ghostVulnerableTime;
+              } else if (ghostsVulnerable && playerData[i][pState] != "ghost_vulnerable") {
+                // Not a hit so check if we need to update state
+                playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
+                playerData[i][pState]    = "ghost_vulnerable";
+                playerData[i][pStateEnd] = Date.now() + ghostVulnerableTime;
+              }
             }
           }
         }
@@ -213,30 +221,45 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         if (Date.now() > playerData[playerIdx][pStateEnd] && playerData[playerIdx][pSubState] > 0) {
           playerData[playerIdx][pState] = "pacman";
         }
-        // Had pacman run out of lives
+        // Has pacman run out of lives
         if (playerData[playerIdx][pSubState] == 0) {
+          Logger.log("pac man dead! - game over ....");
           // Update game end for all players
-          // TODO:
+          // TODO: Clause by game!!! Also only need to once...
+          for (var i = 0; i < playerData.length; i++) {
+            if(playerData[i][pGame] == game) {
+              playerData[i][pGameEnd] = Date.now();
+            }
+          }
         }
       } else if (playerData[playerIdx][pState] == "ghost_vulnerable") {
         if (Date.now() > playerData[playerIdx][pStateEnd]) {
           playerData[playerIdx][pState] = playerData[playerIdx][pSubState]; // Re-instate ghost name
         }
       } else if (playerData[playerIdx][pState] == "ghost_dead") {
-        // TODO: check for start zone...
+        // Check for start zone...
+        if (ghostHomeIdx != -1) {
+          if (isHit(playerData[playerIdx][pLat],
+                    playerData[playerIdx][pLng],
+                    objectData[ghostHomeIdx][oLat],
+                    objectData[ghostHomeIdx][oLng],
+                    objectData[ghostHomeIdx][oRange])) {
+            // Change back to a full ghost
+            playerData[playerIdx][pState] = playerData[playerIdx][pSubState];
+          }
+        }
       }
       // Update sheets
       playerRange.setValues(playerData); 
       objectRange.setValues(objectData);
-    }
 
+    } else {
+      gameOver = true;
+    }
     // 
     lock.releaseLock();
-    
-  } else {
-    gameOver = true;
   }
-
+    
   // Now fetch all player  & object data and return state to client
   var gameStatus        = {};
   gameStatus["players"] = [];
@@ -321,6 +344,8 @@ function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
        }
        if (player["state"]=="pacman") {
          playerData[0][pSubState] = lives;
+       } else {
+         playerData[0][pSubState] = "";
        }
        if (clearScore==1) {
         playerData[0][pScore] = 0;
