@@ -97,7 +97,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
 
   // Try to lock (wait 1sec??) and then update game state
   var lock = LockService.getScriptLock();
-  if (lock.tryLock(1000)) {
+  if (lock.tryLock(1000) && playerIdx > -1) {
 
     // First update player position
     var playerRange = playerSheet.getRange(playerIdx+1,1,1,pGameEnd+1); // All columns!
@@ -122,43 +122,39 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
       if (playerData[playerIdx][pState] == "pacman") {
         for (var i = 0; i < objectData.length; i++) {
           // Check object is for this game and that it is "active"
-          if (objectData[i][oGame] == game && objectData[i][oActive] == 1) {
-            if (objectData[i][oName] == "home") {
-              ghostHomeIdx = i;
-            } else {
-              if (isHit(playerData[playerIdx][pLat],
-                        playerData[playerIdx][pLng],
-                        objectData[i][oLat],
-                        objectData[i][oLng],
-                        objectData[i][oRange])) {
-                if (objectData[i][oName] == "bigdot") {
-                  ghostsVulnerable = true;
-                }
-                var score = 0;
-                switch (objectData[i][oName]) {
-                case "cherry":
-                  score = 200;
-                  break;
-                case "apple":
-                  score = 200;
-                  break;
-                case "orange":
-                  score = 200;
-                  break;
-                case "strawberry":
-                  score = 200;
-                  break;
-                case "smalldot":
-                  score = 10;
-                  break;
-                case "bigdot":
-                  score = 50;
-                  break;
-                default:
-                }
-                playerData[playerIdx][pScore] += score;
-                objectData[i][oActive]         = 0; // Eaten!
+          if (objectData[i][oGame] == game && objectData[i][oActive] == 1 && objectData[i][oName] != "home") {
+            if (isHit(playerData[playerIdx][pLat],
+                      playerData[playerIdx][pLng],
+                      objectData[i][oLat],
+                      objectData[i][oLng],
+                      objectData[i][oRange])) {
+              if (objectData[i][oName] == "bigdot") {
+                ghostsVulnerable = true;
               }
+              var score = 0;
+              switch (objectData[i][oName]) {
+              case "cherry":
+                score = 200;
+                break;
+              case "apple":
+                score = 200;
+                break;
+              case "orange":
+                score = 200;
+                break;
+              case "strawberry":
+                score = 200;
+                break;
+              case "smalldot":
+                score = 10;
+                break;
+              case "bigdot":
+                score = 50;
+                break;
+              default:
+              }
+              playerData[playerIdx][pScore] += score;
+              objectData[i][oActive]         = 0; // Eaten!
             }
           }
         }
@@ -225,7 +221,6 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         if (playerData[playerIdx][pSubState] == 0) {
           Logger.log("pac man dead! - game over ....");
           // Update game end for all players
-          // TODO: Clause by game!!! Also only need to once...
           for (var i = 0; i < playerData.length; i++) {
             if(playerData[i][pGame] == game) {
               playerData[i][pGameEnd] = Date.now();
@@ -238,14 +233,16 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         }
       } else if (playerData[playerIdx][pState] == "ghost_dead") {
         // Check for start zone...
-        if (ghostHomeIdx != -1) {
-          if (isHit(playerData[playerIdx][pLat],
-                    playerData[playerIdx][pLng],
-                    objectData[ghostHomeIdx][oLat],
-                    objectData[ghostHomeIdx][oLng],
-                    objectData[ghostHomeIdx][oRange])) {
-            // Change back to a full ghost
-            playerData[playerIdx][pState] = playerData[playerIdx][pSubState];
+        for (var i = 0; i < objectData.length; i++) {
+          if (objectData[i][oGame] == game && objectData[i][oName] == "home") {
+            if (isHit(playerData[playerIdx][pLat],
+                      playerData[playerIdx][pLng],
+                      objectData[i][oLat],
+                      objectData[i][oLng],
+                      objectData[i][oRange])) {
+              // Change back to a full ghost
+              playerData[playerIdx][pState] = playerData[playerIdx][pSubState];
+            }
           }
         }
       }
@@ -336,21 +333,21 @@ function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
     players.forEach(function(player) {
       var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
       var playerData  = playerRange.getValues();
-       playerData[0][pState]     = player["state"];
-       if (gameLength == -1) {
-         playerData[0][pGameEnd]   = -1;
-       } else {
-         playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
-       }
-       if (player["state"]=="pacman") {
-         playerData[0][pSubState] = lives;
-       } else {
-         playerData[0][pSubState] = "";
-       }
-       if (clearScore==1) {
-        playerData[0][pScore] = 0;
-       }
-       playerRange.setValues(playerData);
+      playerData[0][pState]     = player["state"];
+      if (gameLength == -1) {
+        playerData[0][pGameEnd]   = -1;
+      } else {
+        playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+      }
+      if (player["state"]=="pacman") {
+        playerData[0][pSubState] = lives;
+      } else {
+        playerData[0][pSubState] = "";
+      }
+      if (clearScore==1) {
+       playerData[0][pScore] = 0;
+      }
+      playerRange.setValues(playerData);
     });
   }
   lock.releaseLock();

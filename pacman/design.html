@@ -81,6 +81,9 @@
         case "bigdot":
           return "https://andyjdow.github.io/pacman/assets/bigdot.gif";
           break;
+        case "home":
+          return "https://andyjdow.github.io/pacman/assets/ghost_home.gif";
+          break;
         default:
           return "https://andyjdow.github.io/pacman/assets/ghost_eyes.gif";
         }
@@ -275,6 +278,7 @@
     <input type="radio" name="object" value="apple">apple<br>
     <input type="radio" name="object" value="orange">orange<br>
     <input type="radio" name="object" value="strawberry">strawberry<br>
+    <input type="radio" name="object" value="home">home<br>
     <button id="undo" type="button" onclick="undo()">Undo</button>
     <div id="map">No map loaded.....</div>
     <button id="save" type="button" onclick="save()">Save</button>
