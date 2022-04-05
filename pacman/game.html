@@ -13,6 +13,11 @@
     </script>
 
     <style>
+      #logo {
+        height: 7vh;
+        width: 96vw;
+        object-fit: contain;
+      }
       #map {
         // For some reason 100% wasn't working but found a webpage that introduced vh & vw, viewport hieght & width, which seemed to work!
         // o % is meant to be percentage of parent
@@ -384,6 +389,7 @@
     </script>
   </head>
   <body>
+    <img id="logo" src="https://andyjdow.github.io/pacman/assets/PacManGPSLogo.png">
     <div id="setup">
       Game: <input id="game" value = ""><br>
       Team: <input id="player" value = ""><br> 
