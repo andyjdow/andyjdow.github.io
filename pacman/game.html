@@ -37,6 +37,7 @@
       }
       #scores {
         float: left;
+        width: 80vw;
       }
       #lives {
         float: right;
@@ -294,6 +295,11 @@
                       livesDiv.appendChild(lifeImg);
                     }
                   }
+                } else {
+                  // Clear the lives display
+                  lives = 0;
+                  var livesDiv  = document.getElementById("lives");
+                  livesDiv.innerHTML = "";
                 }
               }
             } // Not registered
