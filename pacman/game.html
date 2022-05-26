@@ -37,7 +37,6 @@
       }
       #scores {
         float: left;
-        width: 80%;
       }
       #lives {
         float: right;
@@ -52,6 +51,7 @@
         position: absolute;
         top: 50%;
         left: 50%;
+        width: 100%;
         transform: translate(-50%, -50%);
         text-align: center;
         color: #FFFF00;
@@ -341,8 +341,20 @@
             // leaderDiv.innerHTML = "Game Over<br><br>"+scores;
             leaderDiv.innerHTML = "Game Over<br><br>";
             scores = scores.sort(function(a,b) {return b[1]-a[1];});
+            var max_len = 0;
             scores.forEach(function(item) {
-              leaderDiv.innerHTML = leaderDiv.innerHTML + item[0] + " ... " + item[1] +"<br>"; 
+              var score_str = item[0] + "." + item[1];
+              if (score_str.length > max_len) {
+                max_len = score_str.length;
+              }
+            });
+            scores.forEach(function(item) {
+              var score_str = item[0] + "." + item[1];
+              leaderDiv.innerHTML = leaderDiv.innerHTML + item[0] + " .";
+              for (var i = 0; i < max_len - score_str.length; i++) {
+                leaderDiv.innerHTML = leaderDiv.innerHTML + ".";
+              }
+              leaderDiv.innerHTML = leaderDiv.innerHTML + " " + item[1] +"<br>";
             });
           } else {
             leaderDiv.innerHTML = "";

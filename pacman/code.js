@@ -93,7 +93,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
   var playerSheet = SpreadsheetApp.getActiveSheet();
 
-  var gameOver = false;
+  // var gameOver = false;
 
   // Try to lock (wait 1sec??) and then update game state
   var lock = LockService.getScriptLock();
@@ -250,9 +250,10 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
       playerRange.setValues(playerData); 
       objectRange.setValues(objectData);
 
-    } else {
-      gameOver = true;
-    }
+    } //else {
+    //   gameOver = true;
+    // }
+    
     // 
     lock.releaseLock();
   }
@@ -274,8 +275,12 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         "idx"      : i
       }
       // Override sub-state
-      if (gameOver) {
-        playerStatus["substate"] = "gameover";
+      // o Can't use the gameOver flag as it is only set if this updatePlayer call has obtained the lock
+      // if (gameOver) {
+      //   playerStatus["substate"] = "gameover";
+      // }
+      if (Date.now() > playerData[i][pGameEnd] && playerData[i][pGameEnd] != -1) {
+        playerStatus["substate"] = "gameover"; 
       }
       gameStatus["players"].push(playerStatus);
     }
