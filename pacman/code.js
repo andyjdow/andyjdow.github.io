@@ -77,7 +77,7 @@ const oActive   = 5;
 const oStateEnd = 6;
 
 const pacmanDeadTime      = 0.25 * 60000;
-const ghostVulnerableTime = 2 * 60000;
+const ghostVulnerableTime = 0.5 * 60000;
 const pacmanHitRange      = 0.0001; // 0.00005; // 
 const defaultObjectRange  = 0.0001;
 
@@ -253,7 +253,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     } //else {
     //   gameOver = true;
     // }
-    
+
     // 
     lock.releaseLock();
   }
