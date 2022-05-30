@@ -168,6 +168,13 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
                         playerData[i][pLat],
                         playerData[i][pLng],
                         pacmanHitRange)) {
+                // Always kill ghost
+                // o So pacman has a chance
+                // o This needs to happen before the possibility of the break to ensure the ghost dies, otherwise get it can kill pacman again!
+                if (playerData[i][pState] != "ghost_vulnerable") {
+                  playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
+                }
+                playerData[i][pState]      = "ghost_dead";
                 // Who's eaten who?
                 if (ghostsVulnerable || playerData[i][pState] == "ghost_vulnerable") {
                   playerData[playerIdx][pScore] += 500;
@@ -178,12 +185,6 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
                   playerData[i][pScore]            += 500; // Same points for eating pacman
                   break;
                 }
-                // Always kill ghost
-                if (playerData[i][pState] != "ghost_vulnerable") {
-                  playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
-                }
-                playerData[i][pState]      = "ghost_dead";
-
               } else if (ghostsVulnerable && playerData[i][pState] != "ghost_vulnerable") {
                 // Not a hit so check if we need to update state
                 playerData[i][pSubState] = playerData[i][pState]; // Retain ghosts name!
