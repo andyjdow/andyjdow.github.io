@@ -36,7 +36,7 @@ function registerPlayer(game="test",name="dummy") {
     }
   }
   // Otherwise add to table
-  sheet.appendRow([game, name, "registered", "", 0, 0, 0, 0, 0]);
+  sheet.appendRow([game, name, "registered", "", 0, 0, 0, 0, 0, 0]);
   // In case of another aync access now find the player
   var playerData = sheet.getDataRange().getValues();
   for (var i = 0; i < playerData.length; i++) {
@@ -50,23 +50,40 @@ function registerPlayer(game="test",name="dummy") {
   return -1;
 }
 
+function calcDistance(lat1=55.8901103,lng1=-3.3440929,lat2=55.89026165,lng2=-3.343703808) {
+//function calcDistance(lat1=55.877764,lng1=-3.342942,lat2=55.876952,lng2=-3.342362) {
+  // Equirectangular approximation - from https://www.movable-type.co.uk/scripts/latlong.html
+  // o Returns metres distance between 2 points
+  latR1 = lat1 * Math.PI/180;
+  latR2 = lat2 * Math.PI/180;
+  lngR1 = lng1 * Math.PI/180;
+  lngR2 = lng2 * Math.PI/180;
+  x = (lngR2-lngR1) * Math.cos((latR2+latR1)/2);
+  y = (latR2-latR1);
+  d = Math.sqrt(x**2+y**2)*6371e3;
+  Logger.log("d: "+d);
+  return d;
+}
+
 function isHit(lat1,lng1,lat2,lng2,range) {
-  if (Math.sqrt((lat1-lat2)**2+(lng1-lng2)**2) <= range) {
+  // if (Math.sqrt((lat1-lat2)**2+(lng1-lng2)**2) <= range) {
+  if (calcDistance(lat1,lng1,lat2,lng2) <= range) {
     return true;
   } else {
     return false;
   }
 }
 
-const pGame     = 0;
-const pName     = 1;
-const pState    = 2;
-const pSubState = 3; // Lives aswell
-const pScore    = 4;
-const pLat      = 5;
-const pLng      = 6;
-const pStateEnd = 7;
-const pGameEnd  = 8;
+const pGame       = 0;
+const pName       = 1;
+const pState      = 2;
+const pSubState   = 3; // Lives aswell
+const pScore      = 4;
+const pLat        = 5;
+const pLng        = 6;
+const pLastUpdate = 7;
+const pStateEnd   = 8;
+const pGameEnd    = 9;
 
 const oGame     = 0;
 const oName     = 1;
@@ -78,8 +95,9 @@ const oStateEnd = 6;
 
 const pacmanDeadTime      = 0.25 * 60000;
 const ghostVulnerableTime = 0.5 * 60000;
-const pacmanHitRange      = 0.0001; // 0.00005; // 
-const defaultObjectRange  = 0.0001;
+const pacmanHitRange      = 5; // meters 0.0001; // 0.00005; // 
+const defaultObjectRange  = 5; // meters 0.0001;
+const ghostSpeedLimit     = 1.5 // m/s - https://en.wikipedia.org/wiki/Preferred_walking_speed
 
 const ghosts = ["blinky", "inky", "pinky", "clyde"];
 
@@ -103,8 +121,19 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     var playerRange = playerSheet.getRange(playerIdx+1,1,1,pGameEnd+1); // All columns!
     var playerData  = playerRange.getValues();
     if (lat != -1) { 
-      playerData[0][pLat] = lat;
-      playerData[0][pLng] = lng;
+      if (playerData[0][pLat] != -1 && ghosts.includes(playerData[0][pState])) {
+        // Check if ghost is going too fast
+        var distance = calcDistance(lat,lng,playerData[0][pLat],playerData[0][pLng]); // Meters
+        var time     = (Date.now() - playerData[0][pLastUpdate]) / 1e-3; // Seconds
+        if (distance / time > ghostSpeedLimit) {
+          playerData[0][pSubState] = playerData[0][pState]; // Retain ghosts name!
+          playerData[0][pState]    = "ghost_vulnerable";
+          playerData[0][pStateEnd] = Date.now() + ghostVulnerableTime;
+        }
+      }
+      playerData[0][pLat]        = lat;
+      playerData[0][pLng]        = lng;
+      playerData[0][pLastUpdate] = Date.now();
     }
     playerRange.setValues(playerData);
 
