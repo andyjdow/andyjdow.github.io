@@ -97,11 +97,12 @@ const pacmanDeadTime      = 0.25 * 60000;
 const ghostVulnerableTime = 0.5 * 60000;
 const pacmanHitRange      = 5; // meters 0.0001; // 0.00005; // 
 const defaultObjectRange  = 5; // meters 0.0001;
-const ghostSpeedLimit     = 1.5 // m/s - https://en.wikipedia.org/wiki/Preferred_walking_speed
+// const ghostSpeedLimit     = 6 // m/s - https://en.wikipedia.org/wiki/Preferred_walking_speed - 1.42, but with the inaccuracy in GPS I think this is too sensitive
+const ghostSpeedLimit     = 1.8 // m/s - https://en.wikipedia.org/wiki/Preferred_walking_speed - 1.42, switch to phone's recorded speed
 
 const ghosts = ["blinky", "inky", "pinky", "clyde"];
 
-function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
+function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902,speed=-1) {
   Logger.log('updatePlayer: '+playerIdx+" at:"+lat+","+lng);
   // 
   // Get sheets
@@ -111,7 +112,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
   SpreadsheetApp.setActiveSheet(spreadsheet.getSheetByName('Players'));
   var playerSheet = SpreadsheetApp.getActiveSheet();
 
-  // var gameOver = false;
+  // var updateTime = Date.now(); // Get timestamp closest to location sample time and before waiting for lock
 
   // Try to lock (wait 1sec??) and then update game state
   var lock = LockService.getScriptLock();
@@ -123,9 +124,10 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
     if (lat != -1) { 
       if (playerData[0][pLat] != -1 && ghosts.includes(playerData[0][pState])) {
         // Check if ghost is going too fast
-        var distance = calcDistance(lat,lng,playerData[0][pLat],playerData[0][pLng]); // Meters
-        var time     = (Date.now() - playerData[0][pLastUpdate]) / 1e-3; // Seconds
-        if (distance / time > ghostSpeedLimit) {
+        // var distance = calcDistance(lat,lng,playerData[0][pLat],playerData[0][pLng]); // Meters
+        // var time     = (updateTime - playerData[0][pLastUpdate]) * 1e-3; // Seconds
+        // if (distance / time > ghostSpeedLimit) {
+        if (speed > ghostSpeedLimit) {
           playerData[0][pSubState] = playerData[0][pState]; // Retain ghosts name!
           playerData[0][pState]    = "ghost_vulnerable";
           playerData[0][pStateEnd] = Date.now() + ghostVulnerableTime;
@@ -280,9 +282,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
       playerRange.setValues(playerData); 
       objectRange.setValues(objectData);
 
-    } //else {
-    //   gameOver = true;
-    // }
+    }
 
     // 
     lock.releaseLock();
@@ -305,10 +305,6 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902) {
         "idx"      : i
       }
       // Override sub-state
-      // o Can't use the gameOver flag as it is only set if this updatePlayer call has obtained the lock
-      // if (gameOver) {
-      //   playerStatus["substate"] = "gameover";
-      // }
       if (Date.now() > playerData[i][pGameEnd] && playerData[i][pGameEnd] != -1) {
         playerStatus["substate"] = "gameover"; 
       }
