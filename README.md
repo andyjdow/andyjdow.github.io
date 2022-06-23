@@ -1,2 +1,2 @@
 # andyjdow.github.io
-My first repo
+Various web based experiments, github.io is a handy way to host pages
