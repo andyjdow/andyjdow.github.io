@@ -31,6 +31,11 @@
         font-size: 12px;
         font-family: 'Press Start 2P', cursive;
       }
+      /* Change button color when clicked, matches logo */
+      button:active {
+        background-color: #ee8322;
+        color: #fbcf08;
+      }
       #setup,#scores,#lives,html {
         background-color: #242f3e;
         color: #9ca5b3;
@@ -59,6 +64,19 @@
     </style>
 
     <script type="text/javascript">
+
+      var soundBeginning = new Audio("https://andyjdow.github.io/pacman/assets/beginning.wav");
+      // var soundChomp     = new Audio("https://andyjdow.github.io/pacman/assets/chomp.wav");
+      var soundDeath     = new Audio("https://andyjdow.github.io/pacman/assets/death.wav");
+      var soundEatFruit  = new Audio("https://andyjdow.github.io/pacman/assets/eatfruit.wav");
+      var soundEatGhost  = new Audio("https://andyjdow.github.io/pacman/assets/eatghost.wav");
+
+      // soundBeginning.addEventListener("canplaythrough", (event) => {
+      //   // the audio is now playable; play it if permissions allow
+      //   // soundBeginning.play();
+      //   console.log("Beginning loaded");
+      // });
+
       let map;
 
       function initMap() {
@@ -220,10 +238,11 @@
       var player        = "";
       var score         = 0;
       var lives         = 0;
+      var state         = "";
       var playerIdx     = -1;
       var allMarkers    = {};
       var timer         = -1;
-      var gameOver      = false;
+      var wasGameOver   = false;
       var watchOptions  = {
         enableHighAccuracy: true,
         // enableHighAccuracy: false, // Speed up updates
@@ -233,11 +252,12 @@
       var watchPosition = -1;
       var currPosition  = { lat: -1, lng: -1, speed: -1 };
       var prevPosition  = { lat: -1, lng: -1, speed: -1 };
+      var soundPlayed   = false;
 
       function updateGame(lat,lng,speed) {
         google.script.run.withSuccessHandler(function(retVal) {
           var updatedMarkers = {};
-          gameOver           = false;
+          var gameOver       = false;
           var scores         = [];
           retVal["players"].forEach(function(item) {
             console.log(item);
@@ -356,16 +376,25 @@
               }
               leaderDiv.innerHTML = leaderDiv.innerHTML + " " + item[1] +"<br>";
             });
+            if (!wasGameOver) {
+              soundDeath.play();
+            }
           } else {
             leaderDiv.innerHTML = "";
             leaderDiv.style.backgroundColor = "transparent";
+            if (wasGameOver) {
+              soundBeginning.play();
+            }
           }
+          wasGameOver = gameOver;
         }).updatePlayer(game,playerIdx,lat,lng,speed); 
       }
 
       function start() {
         game       = String(document.getElementById("game").value).toLowerCase();
+        game       = game.trim();
         player     = String(document.getElementById("player").value).toLowerCase();
+        player     = player.trim();
         var setupDiv  = document.getElementById("setup");
         var scoreDiv  = document.getElementById("score");
         // Hide inputs
@@ -402,6 +431,10 @@
           alert(error.code+": "+error.message);
         },
         watchOptions);
+        // Play start music
+        soundBeginning.play();
+        // soundChomp.loop = true;
+        // soundChomp.play();
       }
 
     </script>

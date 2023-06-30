@@ -1,3 +1,9 @@
+// The below is required to limit the authenticaion required by limiting access only to the spreadsheet it is attached to.
+// o https://developers.google.com/apps-script/guides/services/authorization#manual_authorization_scopes_forand
+/**
+ * @OnlyCurrentDoc
+ */
+
 function doGet(e) {
   // Default
   var htmlOutput = HtmlService.createHtmlOutputFromFile('game');
@@ -36,7 +42,8 @@ function registerPlayer(game="test",name="dummy") {
     }
   }
   // Otherwise add to table
-  sheet.appendRow([game, name, "registered", "", 0, 0, 0, 0, 0, 0]);
+  // o New players need to join with -1 for pGameEnd otherwise it will end the game for everyone else...
+  sheet.appendRow([game, name, "registered", "", 0, 0, 0, 0, 0, -1]);
   // In case of another aync access now find the player
   var playerData = sheet.getDataRange().getValues();
   for (var i = 0; i < playerData.length; i++) {
