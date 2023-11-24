@@ -391,6 +391,8 @@
       }
 
       function start() {
+        var button          = document.getElementById("start");
+        button.innerHTML    = "Registering..";
         game       = String(document.getElementById("game").value).toLowerCase();
         game       = game.trim();
         player     = String(document.getElementById("player").value).toLowerCase();
@@ -405,6 +407,8 @@
         google.script.run.withSuccessHandler(function(retVal) {
           playerIdx = retVal;
           console.log("register: "+playerIdx);
+          var button          = document.getElementById("start");
+          button.innerHTML    = "Start";
         }).registerPlayer(game,player);
         // Start game update timer
         timer = setInterval(function() {

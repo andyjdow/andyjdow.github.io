@@ -22,10 +22,12 @@
     </style>
 
     <script type="text/javascript">
-      const playerStates = ["pacman", "inky", "blinky", "pinky", "clyde", "none"];
+      const playerStates = ["pacman", "inky", "blinky", "pinky", "clyde", "none", "delete"];
       var game = "";
       var players = "";
       function refresh() {
+        var button            = document.getElementById("refresh");
+        button.innerHTML      = "Fetching..";
         game       = String(document.getElementById("game").value).toLowerCase();
         playersDiv = document.getElementById("players");
         playersDiv.innerHTML = ""; // Clear player list
@@ -48,9 +50,13 @@
             });
           });
           players = retVal;
+          var button        = document.getElementById("refresh");
+          button.innerHTML  = "Refresh";
         }).getPlayers(game);
       }
       function reset() {
+        var button          = document.getElementById("reset");
+        button.innerHTML    = "Resetting..";
         players.forEach(function(player) {
           var playerStates = document.getElementsByName(player["name"]);
           var playerState = "registered";
@@ -66,11 +72,15 @@
         var lives       = document.getElementById("lives").value;
         var gameLength  = document.getElementById("length").value;
         var clearScores = document.getElementById("scores").value;
+        var speed       = document.getElementById("speed").value;
         google.script.run.withSuccessHandler(function(retVal) {
           console.log("Players reset!")
-        }).resetPlayers(players,lives,gameLength,clearScores);
+        }).resetPlayers(players,lives,gameLength,clearScores,speed);
         google.script.run.withSuccessHandler(function(retVal) {
           console.log("Objects reset!")
+          // I think these are both async, don't know which will be first!
+          var button       = document.getElementById("reset");
+          button.innerHTML = "Update";
         }).resetObjects(game);
       }
     </script>
@@ -82,6 +92,7 @@
     Lives : <input  id="lives"  value = "3"  type="number"><br>
     Length: <input  id="length" value = "-1" type="number">mins<br>
     Clear scores: <input  id="scores" value = "0"  type="number"><br>
-    <button id="reset"  type="button" onclick="reset()">Reset</button>
+    Ghost Speed Limit: <input  id="speed" value = "1.8"  type="number"><br>
+    <button id="reset"  type="button" onclick="reset()">Update</button>
   </body>
 </html>

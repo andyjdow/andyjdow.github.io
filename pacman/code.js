@@ -43,7 +43,7 @@ function registerPlayer(game="test",name="dummy") {
   }
   // Otherwise add to table
   // o New players need to join with -1 for pGameEnd otherwise it will end the game for everyone else...
-  sheet.appendRow([game, name, "registered", "", 0, 0, 0, 0, 0, -1]);
+  sheet.appendRow([game, name, "registered", "", 0, 0, 0, ghostSpeedLimit, 0, -1]);
   // In case of another aync access now find the player
   var playerData = sheet.getDataRange().getValues();
   for (var i = 0; i < playerData.length; i++) {
@@ -88,7 +88,8 @@ const pSubState   = 3; // Lives aswell
 const pScore      = 4;
 const pLat        = 5;
 const pLng        = 6;
-const pLastUpdate = 7;
+// const pLastUpdate = 7;
+const pSpeedLimit = 7;
 const pStateEnd   = 8;
 const pGameEnd    = 9;
 
@@ -134,7 +135,8 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902,speed=-1
         // var distance = calcDistance(lat,lng,playerData[0][pLat],playerData[0][pLng]); // Meters
         // var time     = (updateTime - playerData[0][pLastUpdate]) * 1e-3; // Seconds
         // if (distance / time > ghostSpeedLimit) {
-        if (speed > ghostSpeedLimit) {
+        // if (speed > ghostSpeedLimit) {
+        if (speed > playerData[0][pSpeedLimit]) {
           playerData[0][pSubState] = playerData[0][pState]; // Retain ghosts name!
           playerData[0][pState]    = "ghost_vulnerable";
           playerData[0][pStateEnd] = Date.now() + ghostVulnerableTime;
@@ -142,7 +144,7 @@ function updatePlayer(game="test",playerIdx=1,lat=55.87981,lng=-3.32902,speed=-1
       }
       playerData[0][pLat]        = lat;
       playerData[0][pLng]        = lng;
-      playerData[0][pLastUpdate] = Date.now();
+      // playerData[0][pLastUpdate] = Date.now();
     }
     playerRange.setValues(playerData);
 
@@ -360,7 +362,7 @@ function getPlayers(game="test") {
   return players;
 }
 
-function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
+function resetPlayers(players,lives=3,gameLength=-1,clearScore=0,speedLimit=ghostSpeedLimit) {
   Logger.log("resetPlayers...");
   // 
   var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
@@ -371,20 +373,30 @@ function resetPlayers(players,lives=3,gameLength=-1,clearScore=0) {
     players.forEach(function(player) {
       var playerRange = playerSheet.getRange(player["idx"]+1,1,1,pGameEnd+1); // All columns!
       var playerData  = playerRange.getValues();
-      playerData[0][pState]     = player["state"];
-      if (gameLength == -1) {
-        playerData[0][pGameEnd]   = -1;
+      if (player["state"] == "delete") {
+        // We can't remove while the game is running as the playerIDs are the table row! So just make invisible and tidy up later
+        playerData[0][pName] = "";
+        playerData[0][pGame] = ""; // THis is the important one to make them invisible!
       } else {
-        playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+        playerData[0][pState]     = player["state"];
+        if (gameLength == -1) {
+          playerData[0][pGameEnd]   = -1;
+        } else {
+          playerData[0][pGameEnd]   = Date.now()+(gameLength*60000);
+        }
+        if (player["state"]=="pacman") {
+          playerData[0][pSubState] = lives;
+        } else {
+          playerData[0][pSubState] = "";
+        }
+        if (clearScore==1) {
+         playerData[0][pScore] = 0;
+        }
+        if (speedLimit!=-1) {
+         playerData[0][pSpeedLimit] = speedLimit;
+        }
       }
-      if (player["state"]=="pacman") {
-        playerData[0][pSubState] = lives;
-      } else {
-        playerData[0][pSubState] = "";
-      }
-      if (clearScore==1) {
-       playerData[0][pScore] = 0;
-      }
+
       playerRange.setValues(playerData);
     });
   }
