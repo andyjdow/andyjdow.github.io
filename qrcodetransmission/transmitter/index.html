@@ -114,7 +114,7 @@
             color: white;
             background-color: black;
 /*            display: block;*/
-            white-space: pre; 
+            white-space: pre;
 /*            overflow-wrap: break-word;*/
         }
 
@@ -145,7 +145,19 @@
 </head>
 <body>
     <header id="header">
-        <div class="title">Offline QR code generator</div>
+        <!-- <div class="title">Offline QR code generator</div> -->
+        <div id="player-buttons">
+            <a href="#" onclick="Start()" title="Start"> |&lt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="VeryFastRewind()" title="Very fast rewind"> &lt;&lt;&lt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="Rewind()" title="Rewind"> &lt;&lt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="FrameBack()" title="Back one frame"> 1&lt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="Stop()" title="Stop"> #</a>&nbsp;&nbsp;
+            <a href="#" onclick="FrameAdvance()" title="Advance one frame"> &gt;1</a>&nbsp;&nbsp;
+            <a href="#" onclick="Play()" title="Play"> &gt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="FastForward()" title="Fast forward"> &gt;&gt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="VeryFastForward()" title="Very fast forward"> &gt;&gt;&gt;</a>&nbsp;&nbsp;
+            <a href="#" onclick="End()" title="End"> &gt;|</a>&nbsp;&nbsp;&nbsp;
+        </div>
         <div class="expand"></div>
         <div id="size-slider-group">
           <input type="range" id="size-slider" name="size-slider" min="0" max="40" value="0" step="1" list="size-markers" />
@@ -175,20 +187,6 @@
         <!-- <a id="download" href="" download>Download</a> -->
         <!-- <a href="https://github.com/six-two/qr.html" target="_blank" rel="noopener noreferrer">Source code</a> -->
     </header>
-    <div id="player-buttons"> 
-        <!-- <font face="Arial" size="3"> -->
-            <a href="#" onclick="Start()" title="Start"> |&lt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="VeryFastRewind()" title="Very fast rewind"> &lt;&lt;&lt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="Rewind()" title="Rewind"> &lt;&lt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="FrameBack()" title="Back one frame"> 1&lt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="Stop()" title="Stop"> #</a>&nbsp;&nbsp;
-            <a href="#" onclick="FrameAdvance()" title="Advance one frame"> &gt;1</a>&nbsp;&nbsp;
-            <a href="#" onclick="Play()" title="Play"> &gt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="FastForward()" title="Fast forward"> &gt;&gt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="VeryFastForward()" title="Very fast forward"> &gt;&gt;&gt;</a>&nbsp;&nbsp;
-            <a href="#" onclick="End()" title="End"> &gt;|</a>&nbsp;&nbsp;&nbsp;
-        <!-- </font> -->
-    </div> 
     <div id="text-and-qr">
         <div id="input-div">
             <div id="input-error" class="error"></div>
@@ -250,6 +248,10 @@
 
     const PADDING = 10; // 5px on any side for the text-and-qr element -> always 10px in total
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     const showInputError = (message) => {
         // message is untrusted input, so we should escape it properly
         if (message) {
@@ -277,25 +279,51 @@
             return
         }
 
-        try {
-            let minVersion = 1;
-            let maxVersion = 40;
-            let boostECC   = true;
-            if (size_slider.valueAsNumber != 0) {
-                minVersion = size_slider.valueAsNumber;
-                maxVersion = size_slider.valueAsNumber;
-                boostECC   = false;
-            }
-            // console.log('size_slider.valueAsNumber: '+size_slider.valueAsNumber);
-            // console.log('minVersion: '+minVersion);
-            // console.log('maxVersion: '+maxVersion);
-            // console.log('boostECC: '+boostECC);
+        // Is the size fixed?
+        let minVersion = 1;
+        let maxVersion = 40;
+        let boostECC   = true;
+        if (size_slider.valueAsNumber != 0) {
+            minVersion = size_slider.valueAsNumber;
+            maxVersion = size_slider.valueAsNumber;
+            boostECC   = false;
+        }
 
-            // const qr_code_object = qrcodegen.QrCode.encodeText(text, ecc_level);
-            // const segs: Array<qrcodegen.QrSegment> = qrcodegen.QrSegment.makeSegments(text);
-            const segs           = qrcodegen.QrSegment.makeSegments(text);
-            const qr_code_object = qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(text), ecc_level, minVersion, maxVersion, -1, boostECC);
-            qrcode.innerHTML = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black");
+        try {
+            let text_remaining       = text;
+            let i                    = 0;
+            const delay              = 1000;
+            while ( text_remaining.length > 0 ) {
+                //
+
+                //
+                let text_that_fits   = getMaxQrCodeString(text_remaining,ecc_level);
+                text_remaining       = text_remaining.slice(text_that_fits.length);
+                console.log('Sending :'+text_that_fits+':');
+                console.log('left over:'+text_remaining+':');
+                if (text_that_fits.length == 0) {
+                    text_that_fits   = text; // Force error to be thrown
+                }
+                // const qr_code_object = qrcodegen.QrCode.encodeText(text, ecc_level);
+                // const segs: Array<qrcodegen.QrSegment> = qrcodegen.QrSegment.makeSegments(text);
+                const qr_code_object = qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(text_that_fits), ecc_level, minVersion, maxVersion, -1, boostECC);
+                qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black");
+                // Stack up the images to display
+                setTimeout(() => { qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black"); },i*delay);
+                i                    = i + 1;
+                // if ( text_remaining.length > 0 ) {
+                //     // setTimeout(() => { console.log('Waited between frame sections'); }, 1000);
+                //     // await sleep(10000).then(() => { console.log('Waited between frame sections!'); });
+                //     // Apparently bad! - https://www.sitepoint.com/delay-sleep-pause-wait/
+                //     const date = Date.now();
+                //     let currentDate = null;
+                //     do {
+                //       currentDate = Date.now();
+                //     } while (currentDate - date < 1000);
+                //     console.log('Waited between frame sections');
+                // }
+            }
+
         } catch (error) {
             console.log(error);
             suggestions = '<li><a href="javascript:fixByCuttingTextOfAfterQrCodeMaximumSize()">Cut off the input that does not fit into the QR code</a>';
@@ -345,6 +373,7 @@ The following functions can try to help:
             console.warn(`Unknown error correction level '${eccLevelVal}', defaulting to low`);
             ecc_level = qrcodegen.QrCode.Ecc.LOW;
         }
+        // Below is only used for the error message could comment out to speed things up...
         max_size_digits         = getMaxQrCodeLength("0", ecc_level);
         max_size_alpha_numeric  = getMaxQrCodeLength("A", ecc_level);
         max_size_byte           = getMaxQrCodeLength("a", ecc_level);
@@ -365,7 +394,7 @@ The following functions can try to help:
 
         // This rewrites the unicode so that ä becomes a + a diacritic mark. Later on we can drop the diacritic. This way we convert it to the nearest unicode character
         string = string.normalize("NFD");
-        
+
         // The alphanumeric charset allows only uppercase characters, so we convert all lowercase ones
         string = string.toUpperCase();
 
@@ -381,10 +410,25 @@ The following functions can try to help:
         return getMaxQrCodeString(string, ecc_level).length;
     }
 
-    const getMaxQrCodeString = (string_to_try_to_use, ecc_level) => {        
+    const getMaxQrCodeString = (string_to_try_to_use, ecc_level) => {
+        // Duplicates code in updateQRCode
+        let minVersion = 1;
+        let maxVersion = 40;
+        let boostECC   = true;
+        if (size_slider.valueAsNumber != 0) {
+            minVersion = size_slider.valueAsNumber;
+            maxVersion = size_slider.valueAsNumber;
+            boostECC   = false;
+        }
+        // console.log('size_slider.valueAsNumber: '+size_slider.valueAsNumber);
+        // console.log('minVersion: '+minVersion);
+        // console.log('maxVersion: '+maxVersion);
+        // console.log('boostECC: '+boostECC);
+        //
         try {
             // First check whether the whole string fits
-            qrcodegen.QrCode.encodeText(string_to_try_to_use, ecc_level);
+            // qrcodegen.QrCode.encodeText(string_to_try_to_use, ecc_level);
+            qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(string_to_try_to_use), ecc_level, minVersion, maxVersion, -1, boostECC);
             return string_to_try_to_use
         } catch {
             // If not, binary search for the cutof point
@@ -393,7 +437,8 @@ The following functions can try to help:
             while (min < max) {
                 const middle = Math.ceil((min + max) / 2);
                 try {
-                    qrcodegen.QrCode.encodeText(string_to_try_to_use.slice(0, middle), ecc_level);
+                    // qrcodegen.QrCode.encodeText(string_to_try_to_use.slice(0, middle), ecc_level);
+                    qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(string_to_try_to_use.slice(0, middle)), ecc_level, minVersion, maxVersion, -1, boostECC);
                     // QR code generation worked -> set minimum to this size
                     min = middle;
                 } catch (ex) {
@@ -447,6 +492,7 @@ The following functions can try to help:
     // Update the QR code whenever the text or the window size changes
     // Use max-width/height to keep the QR code div in square shape and allow the textarea to use the remaining space
     input_area.addEventListener("input", updateQRCode);
+
     const on_window_resize = () => {
         const width = text_and_qr.clientWidth;
         const height = text_and_qr.clientHeight;
@@ -478,70 +524,11 @@ The following functions can try to help:
     window.addEventListener("resize", on_window_resize);
 
     // sometimes the event does not get called (for example when closing the browser console). So we call it regularly just to be sure
-    setInterval(on_window_resize, 1000)
+    // o Can't do this when generating a series of QR codes to send 1 message
+    // setInterval(on_window_resize, 1000)
+
     // Call it shortly after loading the page to determine the inital layout
     setTimeout(on_window_resize, 10);
-
-    // if (SHOW_CLIPBOARD_MONITORING_CONTROLS) {
-    //     let monitor_clipboard_enabled = false;
-    //     let clipboard_interval_handle;
-
-    //     const monitor_clipboard_menuitem = document.getElementById("monitor-clipboard");
-    //     const update_cb_mon_menuitem = () => monitor_clipboard_menuitem.innerHTML = monitor_clipboard_enabled ? "Stop clipboard monitoring" : "Start clipboard monitoring";
-    //     monitor_clipboard_menuitem.addEventListener("click", () => {
-    //         if (window.isSecureContext) {
-    //             if (monitor_clipboard_enabled) {
-    //                 console.log("Stopping clipboard monitoring");
-    //                 clearInterval(clipboard_interval_handle);
-    //                 monitor_clipboard_enabled = false;
-    //                 showInputError(); // clear the error just in case it was caused by the clipboard
-    //             } else {
-    //                 console.log("Starting clipboard monitoring");
-    //                 clipboard_interval_handle = setInterval(check_clipboard, 100);
-    //                 monitor_clipboard_enabled = true;
-    //             }
-    //         } else {
-    //             if (monitor_clipboard_enabled) {
-    //                 // enable the user to hide the message by pressing stop
-    //                 showInputError();
-    //             } else {
-    //                 showInputError("Clipboard can not be monitored, because the page is not a secure context. See https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts for more details.")
-    //             }
-    //             monitor_clipboard_enabled = !monitor_clipboard_enabled;
-    //         }
-    //         update_cb_mon_menuitem()
-    //     });
-    //     update_cb_mon_menuitem();
-
-    //     let last_value_copied = "";
-
-    //     const check_clipboard = () => {
-    //         if (monitor_clipboard_enabled) {
-    //             console.debug("Reading clipboard");
-    //             let clipboard_promise;
-    //             try {
-    //                 clipboard_promise = navigator.clipboard.readText();
-    //             } catch (error) {
-    //                 // Firefox (at least on Linux and Mac) causes this
-    //                 showInputError('Failed to read clipboard contents. This is a known problem in Firefox, please try using a different Browser like Chrome, Edge, etc (anything except Internet Explorer). If you only have Firefox, you could enable Clipboard access by typing "about:config" in the URL bar, searching for "dom.events.testing.asyncClipboard" and setting it to true (by double clicking). Afterwards you can reload the page. Please note, that doing this may have severe security implications, since other websites will be able to read your clipboard, which may contain sensitive information such as passwords.');
-    //                 return;
-    //             }
-    //             clipboard_promise.then(
-    //                 clip_text => {
-    //                     // Only update the text when a different value is copied. This allows the user to change the text without it being reset every second.
-    //                     if (clip_text && clip_text != last_value_copied) {
-    //                         input.value = clip_text;
-    //                         last_value_copied = clip_text;
-    //                     }
-    //                     showInputError();
-    //                 }
-    //             ).catch(error => {
-    //                 // This error only occured on Mac with Safari
-    //                 showInputError(`Failed to read clipboard contents because of the following error: ${error}`);
-    //             });
-    //         }
-    //     };
-    // }
 
     // Starwars ASCIIMATION - https://www.asciimation.co.nz/index.php
 
@@ -599,6 +586,7 @@ The following functions can try to help:
         }
         console.log(frameText);
         input_area.value = frameText;
+        updateQRCode();
     }
 
     function updateDisplay()
