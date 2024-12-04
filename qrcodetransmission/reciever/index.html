@@ -7,9 +7,9 @@
   <script src="./jsQR.js"></script>
   <link href="https://fonts.googleapis.com/css?family=Ropa+Sans" rel="stylesheet">
   <style>
-    bod/*y {
+    body {
 /*      font-family: 'Ropa Sans', sans-serif;*/
-      color: #333;
+/*      color: #333;*/
 /*      max-width: 640px;*/
       margin: 0 auto;
       position: relative;
@@ -114,6 +114,8 @@
       requestAnimationFrame(tick);
     });
 
+    let lastData = "";
+
     function tick() {
       loadingMessage.innerText = "⌛ Loading video..."
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -135,7 +137,15 @@
           drawLine(code.location.bottomLeftCorner, code.location.topLeftCorner, "#FF3B58");
           outputMessage.hidden            = true;
           outputData.parentElement.hidden = false;
-          outputData.innerText            = code.data;
+          if (code.data != lastData) {
+            console.log("Line start: "+code.data.slice(0,5));
+            if (code.data.slice(0,6) == '@START') {
+              outputData.innerText            = code.data.slice(6);
+            } else {
+              outputData.innerText            = outputData.innerText+code.data;
+            }
+            lastData = code.data;
+          }
         } else {
           // outputMessage.hidden            = false;
           // outputData.parentElement.hidden = true;

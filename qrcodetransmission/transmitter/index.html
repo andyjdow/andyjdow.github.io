@@ -269,6 +269,8 @@
         qrcode.innerHTML = `<div class="error"><b>QR code generation failed:</b><br>${message}</div>`;
     }
 
+    let updateQRCodeDone = true;
+
     const updateQRCode = () => {
         const max_size_fit_window = Math.min(qrcode.clientWidth, qrcode.clientHeight, QR_MAX_SIZE);
         const qr_size = Math.max(QR_MIN_SIZE, max_size_fit_window) - 10; // remove 2 * 5px for the paddings
@@ -278,6 +280,14 @@
             showQrCodeGenerationError("You need to type some text in the input area! It will then be rendered as a QR code.");
             return
         }
+
+        if (!updateQRCodeDone) {
+            // Things are still being displayed from the last call
+            return
+        }
+
+        // Flag to indicate when all QRCodes have been generated and displayed
+        updateQRCodeDone = false;
 
         // Is the size fixed?
         let minVersion = 1;
@@ -290,12 +300,10 @@
         }
 
         try {
-            let text_remaining       = text;
+            let text_remaining       = '@START'+text;
             let i                    = 0;
             const delay              = 1000;
             while ( text_remaining.length > 0 ) {
-                //
-
                 //
                 let text_that_fits   = getMaxQrCodeString(text_remaining,ecc_level);
                 text_remaining       = text_remaining.slice(text_that_fits.length);
@@ -309,21 +317,12 @@
                 const qr_code_object = qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(text_that_fits), ecc_level, minVersion, maxVersion, -1, boostECC);
                 qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black");
                 // Stack up the images to display
-                setTimeout(() => { qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black"); },i*delay);
+                setTimeout(() => { qrcode.innerHTML = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black"); },i*delay);
                 i                    = i + 1;
-                // if ( text_remaining.length > 0 ) {
-                //     // setTimeout(() => { console.log('Waited between frame sections'); }, 1000);
-                //     // await sleep(10000).then(() => { console.log('Waited between frame sections!'); });
-                //     // Apparently bad! - https://www.sitepoint.com/delay-sleep-pause-wait/
-                //     const date = Date.now();
-                //     let currentDate = null;
-                //     do {
-                //       currentDate = Date.now();
-                //     } while (currentDate - date < 1000);
-                //     console.log('Waited between frame sections');
-                // }
             }
 
+            // Schedule updating status flag
+            setTimeout(() => { updateQRCodeDone = true; },i*delay);
         } catch (error) {
             console.log(error);
             suggestions = '<li><a href="javascript:fixByCuttingTextOfAfterQrCodeMaximumSize()">Cut off the input that does not fit into the QR code</a>';
@@ -593,6 +592,12 @@ The following functions can try to help:
     {
         if(g_timerHandle)
             clearTimeout(g_timerHandle);
+
+        if (!updateQRCodeDone) {
+            // Don't try to update so re-schedule
+            g_timerHandle = setTimeout( updateDisplay, 1000 );
+            return
+        }
 
         displayFrame(g_currentFrame);
 
