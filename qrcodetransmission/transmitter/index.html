@@ -131,21 +131,34 @@
             padding: 5px;
         }
 
+        /* I had a lot of faffing about trying to add a "container" around the qrcode div so I could place the scribble canvas on top
+        eventually found there is some resizing done in on_window_resize!! */
+        #qrcode-and-scribble {
+            width: 100%;
+            height: 100%;
+        }
+
         #qrcode {
             width: 100%;
             height: 100%;
             padding: 5px;
+            position: absolute;
+            z-index: 1;
         }
 
-        #qrcode canvas {
-            margin: auto;
-            display: block;
+        #scribble {
+            width: 100%;
+            height: 100%;
+            padding: 5px;
+            position: absolute;
+            z-index: 10;
+            opacity: 1;
         }
+
     </style>
 </head>
 <body>
     <header id="header">
-        <!-- <div class="title">Offline QR code generator</div> -->
         <div id="player-buttons">
             <a href="#" onclick="Start()" title="Start"> |&lt;</a>&nbsp;&nbsp;
             <a href="#" onclick="VeryFastRewind()" title="Very fast rewind"> &lt;&lt;&lt;</a>&nbsp;&nbsp;
@@ -182,10 +195,7 @@
                 <option value="3"></option>
           </datalist>
         </div>
-        <!-- <div class="expand"></div> -->
-        <!-- <div id="monitor-clipboard" class="button"></div> -->
-        <!-- <a id="download" href="" download>Download</a> -->
-        <!-- <a href="https://github.com/six-two/qr.html" target="_blank" rel="noopener noreferrer">Source code</a> -->
+        <button id="clear" type="button" onclick="clearCanvas()">Clear</button>
     </header>
     <div id="text-and-qr">
         <div id="input-div">
@@ -193,7 +203,10 @@
             <textarea id="input" name="input" placeholder="Type the data you want to convert to a QR code here. Alternatively you can try to drag and drop or copy-paste a file in this text box, but not all browsers/operating systems support that." id="" autofocus>You can generate QR codes from any text by typing in in this box. The code generation is performed on your local device, no data is sent anywhere.
             </textarea>
         </div>
-        <div id="qrcode"><div class="error">You need to enable JavaScript to use this page</div></div>
+        <div id="qrcode-and-scribble">
+            <div id="qrcode"><div class="error">You need to enable JavaScript to use this page</div></div>
+            <canvas id="scribble"></canvas>
+        </div>
     </div>
 
 <script type="text/javascript">
@@ -205,7 +218,55 @@
     const ecc_slider    = document.getElementById("ecc-slider");
     const size_slider   = document.getElementById("size-slider");
     const size_value    = document.getElementById("size-value");
+    const qrcode_and_scribble = document.getElementById("qrcode-and-scribble");
+    var canvas          = document.getElementById('scribble');
+    var ctx             = canvas.getContext('2d');
+    var prevPos         = null;
 
+    // Picked up most of the scribble code from https://jsfiddle.net/ne2hms0o/
+    canvas.addEventListener("mousedown",(e)=> {
+        // console.log("Clicked!")
+        prevPos = getCursorPosition(e);
+    });
+    canvas.addEventListener("mouseup",(e)=> {
+        // console.log("Un-Clicked!")
+        prevPos = null;
+    });
+    canvas.addEventListener("mousemove",(e)=> {
+        // console.log("Moving: "+e.clientX+","+e.clientY);
+        // console.log("      : "+canvas.offsetLeft+","+canvas.offsetTop);
+        var pos, i;
+
+        if (!prevPos) {
+            return;
+        }
+
+        pos = getCursorPosition(e);
+
+        // console.log("Drawing: "+pos.x+","+pos.y)
+
+        ctx.strokeStyle = 'rgb(0, 255, 0)';
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(prevPos.x, prevPos.y);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+
+        prevPos = pos;
+    });
+    function getCursorPosition(e) {
+        return {
+            x: e.clientX - canvas.offsetLeft, // canvasPos.left,
+            y: e.clientY - canvas.offsetTop   // canvasPos.top
+        };
+    }
+    function clearCanvas() {
+        ctx.reset();
+    }
+
+    //
     let ecc_level               = "TODO";
     let max_size_digits         = "TODO";
     let max_size_alpha_numeric  = "TODO";
@@ -315,7 +376,7 @@
                 // const qr_code_object = qrcodegen.QrCode.encodeText(text, ecc_level);
                 // const segs: Array<qrcodegen.QrSegment> = qrcodegen.QrSegment.makeSegments(text);
                 const qr_code_object = qrcodegen.QrCode.encodeSegments(qrcodegen.QrSegment.makeSegments(text_that_fits), ecc_level, minVersion, maxVersion, -1, boostECC);
-                qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black");
+                // qrcode.innerHTML     = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black");
                 // Stack up the images to display
                 setTimeout(() => { qrcode.innerHTML = toSvgString(qr_code_object, QR_BORDER_SIZE, "white", "black"); },i*delay);
                 i                    = i + 1;
@@ -518,6 +579,17 @@ The following functions can try to help:
         }
 
         updateQRCode();
+
+        // This was key to getting the  qrcode_and_scribble container div to work correctly. I think it needed
+        // to be properly sized to hold the QR code!
+        qrcode_and_scribble.style.maxWidth  = qrcode.style.maxWidth;
+        qrcode_and_scribble.style.maxHeight = qrcode.style.maxHeight;
+
+        // This is required for the drawing to work correctly. Canvas width and height are in "logical" pixels, which
+        // can be different to the element size!
+        // o https://stackoverflow.com/questions/66835903/what-is-the-difference-between-canvas-width-and-canvas-clientwidth
+        canvas.width = canvas.clientWidth;
+        canvas.height = canvas.clientHeight;
     };
 
     window.addEventListener("resize", on_window_resize);
