@@ -42,10 +42,42 @@
       display: flex;
     }
 
-    #canvas {
+    #camera-and-graph {
       width: 50%;
+      height: 100%;
+    }
+
+    #graph {
+/*      width: 50%;*/
+      width: 100%;  /* Of parent, now in canvas-and-graph */
+/*      padding-right:5%;*/
+/*      height: 40%; /* Accommodate for the canvas padding? */*/
+/*      height: 45%;*/
+/*      padding-top: 5%;*/
+/*      padding-bottom:5%;*/
+/*      padding-bottom: 0;*/
+/*      display: flex; /* Stretch ? */*/
+      height: stretch;
+      padding: 10px;
+      padding-bottom: 0;
+
+      text-align:left;
+      font-size: 15px;
+      font-family: Courier New,Fixed;
+      line-height: 16px;
+      color: white;
+      background-color: black;
+      white-space: pre;
+      word-wrap: break-word;
+    }
+
+    #canvas {
+/*      width: 50%;*/
+      width: 100%;  /* Of parent */
+/*      height: 50%;*/
       padding-top: 5%;
       padding-bottom:5%;
+/*      padding-right:5%;*/
 /*      aspect-ratio: 3/4;*/
     }
 
@@ -81,7 +113,26 @@
   <p>Pure JavaScript QR code decoding library.</p> -->
   <div id="loadingMessage">🎥 Unable to access video stream (please make sure you have a webcam enabled)</div>
   <div id="camera-and-output">
-    <canvas id="canvas" hidden></canvas>
+    <div id="camera-and-graph">
+      <canvas id="canvas" hidden></canvas>
+      <div id="graph" hidden>    1 -|
+      -|
+      -|
+      -|
+      -|
+      -|
+      -|
+      -|
+  0.5 -|
+      -|
+0.375 -|
+      -|
+ 0.25 -|
+      -|
+0.125 -|
+      -|
+   0  -|</div>
+    </div>
     <div id="output" hidden>
       <div id="outputMessage">No QR code detected.</div>
       <!-- <div hidden><b>Data:</b> <span id="outputData"></span></div> -->
@@ -96,6 +147,12 @@
     var outputContainer = document.getElementById("output");
     var outputMessage   = document.getElementById("outputMessage");
     var outputData      = document.getElementById("outputData");
+    var graph           = document.getElementById("graph");
+
+    var graph_axis      = graph.innerText.split("\n");
+    var graph_length    = 50;
+    var graph_data      = [];
+    var code_count      = 1;
 
     function drawLine(begin, end, color) {
       canvas.beginPath();
@@ -104,6 +161,37 @@
       canvas.lineWidth = 4;
       canvas.strokeStyle = color;
       canvas.stroke();
+    }
+
+    function drawGraph() {
+      var graphString = "";
+      var graphY      = 1;
+      var graphStep   = 1 / (graph_axis.length-1);
+      console.log("graph_axis.length : "+graph_axis.length   );
+      console.log("graphY            : "+graphY   );
+      console.log("graphStep         : "+graphStep);
+      console.log("graph_length      : "+graph_length);
+      console.log("graph_data.length : "+graph_data.length);
+      for (var row = 0; row < graph_axis.length; row++) {
+        graphString = graphString + graph_axis[row] + " ";
+        // console.log(graphString);
+        for (var col = 0; col < graph_length; col++) {
+          if (col < graph_data.length) {
+            console.log("graphY: "+graphY+" graph_data[col]: "+graph_data[col]);
+            if (graph_data[col] >= graphY & graph_data[col] < graphY + graphStep) {
+              graphString = graphString + "*";
+            } else if (graph_data[col] >= graphY) {
+              graphString = graphString + ".";
+            } else {
+              graphString = graphString + " ";
+            }
+          }
+        }
+        graphString = graphString + "\n";
+        graphY      = graphY - graphStep;
+      }
+      // console.log(graphString);
+      graph.innerText = graphString;
     }
 
     // Use facingMode: environment to attemt to get the front camera on phones
@@ -119,12 +207,14 @@
     function tick() {
       loadingMessage.innerText = "⌛ Loading video..."
       if (video.readyState === video.HAVE_ENOUGH_DATA) {
-        loadingMessage.hidden = true;
-        canvasElement.hidden = false;
+        loadingMessage.hidden  = true;
+        canvasElement.hidden   = false;
         outputContainer.hidden = false;
+        graph.hidden           = false;
 
         canvasElement.height = video.videoHeight;
-        canvasElement.width = video.videoWidth;
+        canvasElement.width  = video.videoWidth;
+
         canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
         var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
         var code = jsQR(imageData.data, imageData.width, imageData.height, {
@@ -141,8 +231,15 @@
             console.log("Line start: "+code.data.slice(0,5));
             if (code.data.slice(0,6) == '@START') {
               outputData.innerText            = code.data.slice(6);
+              graph_data.push(1/code_count);
+              if (graph_data.length > graph_length) {
+                graph_data.shift(); // remove first element
+              }
+              code_count                      = 1;
+              drawGraph();
             } else {
               outputData.innerText            = outputData.innerText+code.data;
+              code_count                      = code_count + 1;
             }
             lastData = code.data;
           }
