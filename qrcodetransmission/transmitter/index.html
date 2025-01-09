@@ -249,7 +249,8 @@
         ctx.strokeStyle = 'rgb(0, 255, 0)';
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 4;
+        // ctx.lineWidth = 4;
+        ctx.lineWidth = 10;
         ctx.beginPath();
         ctx.moveTo(prevPos.x, prevPos.y);
         ctx.lineTo(pos.x, pos.y);
@@ -264,7 +265,9 @@
         };
     }
     function clearCanvas() {
-        ctx.reset();
+        // ctx.reset();
+        // Use alternative method to support older browsers
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
     //
